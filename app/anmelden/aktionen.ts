@@ -6,7 +6,10 @@ import { anmeldungEingerichtet, eigeneAdresse } from "@/lib/umgebung";
 export type AnmeldeErgebnis =
   | { stand: "leer" }
   | { stand: "geschickt"; adresse: string }
-  | { stand: "fehler"; text: string };
+  /* `adresse` wird auch im Fehlerfall zurückgegeben: Ihre Eingabe bleibt im
+     Feld stehen, damit sie korrigieren statt neu tippen kann. Kein Ausfall
+     darf sie Tipparbeit kosten (MODELL.md §5). */
+  | { stand: "fehler"; text: string; adresse: string };
 
 /**
  * Schickt ihr einen Anmeldelink per Mail. Kein Passwort, das sie sich merken
@@ -21,20 +24,24 @@ export async function linkAnfordern(
 ): Promise<AnmeldeErgebnis> {
   const adresse = String(formular.get("adresse") ?? "").trim();
 
+  const fehler = (text: string): AnmeldeErgebnis => ({
+    stand: "fehler",
+    text,
+    adresse,
+  });
+
   if (!adresse) {
-    return { stand: "fehler", text: "Trag bitte deine E-Mail-Adresse ein." };
+    return fehler("Trag bitte deine E-Mail-Adresse ein.");
   }
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(adresse)) {
-    return {
-      stand: "fehler",
-      text: "Das sieht noch nicht nach einer E-Mail-Adresse aus. Schau bitte nochmal drüber.",
-    };
+    return fehler(
+      "Das sieht noch nicht nach einer E-Mail-Adresse aus. Schau bitte nochmal drüber.",
+    );
   }
   if (!anmeldungEingerichtet()) {
-    return {
-      stand: "fehler",
-      text: "Die App ist noch nicht mit der Datenbank verbunden. Das muss einmalig eingerichtet werden.",
-    };
+    return fehler(
+      "Die App ist noch nicht mit der Datenbank verbunden. Das muss einmalig eingerichtet werden.",
+    );
   }
 
   try {
@@ -47,17 +54,15 @@ export async function linkAnfordern(
     });
 
     if (error) {
-      return {
-        stand: "fehler",
-        text: "Der Link ließ sich gerade nicht verschicken. Probier es in einer Minute nochmal.",
-      };
+      return fehler(
+        "Der Link ließ sich gerade nicht verschicken. Probier es in einer Minute nochmal.",
+      );
     }
 
     return { stand: "geschickt", adresse };
   } catch {
-    return {
-      stand: "fehler",
-      text: "Die Verbindung klemmt gerade. Probier es in einer Minute nochmal.",
-    };
+    return fehler(
+      "Die Verbindung klemmt gerade. Probier es in einer Minute nochmal.",
+    );
   }
 }

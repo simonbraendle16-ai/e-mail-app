@@ -46,6 +46,10 @@ export function Anmeldeformular() {
         autoComplete="email"
         required
         placeholder="name@beispiel.de"
+        /* Nach einem Fehler steht ihre Eingabe wieder da — korrigieren
+           statt neu tippen. */
+        defaultValue={ergebnis.stand === "fehler" ? ergebnis.adresse : ""}
+        key={ergebnis.stand === "fehler" ? ergebnis.adresse : "leer"}
       />
 
       {ergebnis.stand === "fehler" ? (
