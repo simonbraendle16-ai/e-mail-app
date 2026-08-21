@@ -4,8 +4,8 @@
 > Durchlaufen: Anforderungs-Drill ✓ · Spezifikation ✓ · Kreuzverhör ✓ · Freigabe durch den User ✓
 > Gebaut: Fundament ✓ · Design-Prototyp ✓ · Datenmodell ✓ · Modellanbindung ✓ · Skill-Maschinerie ✓
 > · Verfassen Deutsch ✓ · Maschinelle Prüfungen ✓ · Übersetzung & Rückübersetzung ✓
-> · Korrekturschleife ✓ · Kundengedächtnis ✓ · Wissensbasis ✓ — als Nächstes Phase 11
-> (Rückschrittsprüfung).
+> · Korrekturschleife ✓ · Kundengedächtnis ✓ · Wissensbasis ✓ · Rückschrittsprüfung ✓
+> — als Nächstes Phase 12 (Politur).
 >
 > **Zwei Dinge aus Phase 10, die noch echten Kontakt brauchen:**
 > Die Migration `0009_unterlagen_ablage.sql` (Storage-Eimer samt Zugriffsregeln) ist
@@ -22,7 +22,7 @@
 > aus `PLAN.md` §6 braucht einen Ort, und keiner der fünf Bildschirme passt besser.
 > Die Leitidee des Bildschirms bleibt gewahrt: Angebot, nicht Aufgabe.
 >
-> **Empfohlen vor Phase 11:** zehn Minuten Draufschauen durch die Mutter (PLAN.md §6, §9).
+> **Empfohlen vor Phase 12:** zehn Minuten Draufschauen durch die Mutter (PLAN.md §6, §9).
 > Repo: https://github.com/simonbraendle16-ai/e-mail-app (privat)
 > Dieses Dokument ist die verbindliche Projekt-Referenz. Was hier steht, ist entschieden.
 
