@@ -10,7 +10,7 @@ import {
   ungedeckteStellen,
 } from "@/components/befundstreifen";
 import { pruefen } from "@/lib/pruefungen/pruefen";
-import { Aufklappbar } from "./aufklappbar";
+import { Aufklappbar } from "@/components/bausteine/aufklappbar";
 import { Werkzeugleiste } from "./werkzeugleiste";
 import {
   fassungAusfuehrlich,

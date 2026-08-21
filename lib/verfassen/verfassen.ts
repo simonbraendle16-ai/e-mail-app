@@ -21,7 +21,17 @@ import { kundeErkennen } from "./kundenerkennung";
 /** Was die Oberfläche während des Formulierens angezeigt bekommt. */
 export type Fortschritt =
   | { art: "schritt"; text: string }
-  | { art: "kunde"; name: string | null; sprache: "de" | "en" }
+  /**
+   * Wer der Kunde ist. Die Kennung geht mit, weil die Übersetzung sie
+   * braucht — Sprache und Land stehen in der Akte, und ohne Kennung fiele
+   * beides aus (`CLAUDE.md` §5.2).
+   */
+  | {
+      art: "kunde";
+      id: string | null;
+      name: string | null;
+      sprache: "de" | "en";
+    }
   | { art: "skill"; name: string; bezeichnung: string }
   | { art: "text"; text: string }
   /**
@@ -101,7 +111,7 @@ export async function* verfassen(
       sprache = kontextVorab.kunde?.sprache === "en" ? "en" : "de";
     }
 
-    yield { art: "kunde", name: kundenname, sprache };
+    yield { art: "kunde", id: kundeId, name: kundenname, sprache };
 
     /* --- 2. Skill wählen --------------------------------------------- */
     const wahl = await skillWaehlen({

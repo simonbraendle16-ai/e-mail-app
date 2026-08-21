@@ -10,11 +10,18 @@ import { useState } from "react";
 export function Aufklappbar({
   zeile,
   children,
+  offenZuBeginn = false,
 }: {
   zeile: string;
   children: React.ReactNode;
+  /**
+   * Steht schon offen da. Nur für den Fall, dass es einen Grund gibt
+   * hinzusehen — die Rückübersetzung klappt sich auf, wenn die Prüfung eine
+   * Abweichung gefunden hat (`SKILLS.md`, Skill `rueckuebersetzung`).
+   */
+  offenZuBeginn?: boolean;
 }) {
-  const [offen, setOffen] = useState(false);
+  const [offen, setOffen] = useState(offenZuBeginn);
 
   return (
     <div>

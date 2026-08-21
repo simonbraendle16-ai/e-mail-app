@@ -16,6 +16,7 @@ import {
   Befundstreifen,
   ungedeckteStellen,
 } from "@/components/befundstreifen";
+import { EnglischeFassung } from "@/components/englische-fassung";
 import type { Befund } from "@/lib/pruefungen/typen";
 import {
   entwurfLesen,
@@ -216,7 +217,7 @@ export function Antwortformular({
                   setErkennung({
                     stand: "erkannt",
                     kunde: {
-                      id: "",
+                      id: nachricht.id ?? "",
                       name: nachricht.name,
                       sprache: nachricht.sprache,
                     },
@@ -345,7 +346,10 @@ export function Antwortformular({
       ) : null}
 
       {lage.art === "fertig" ? (
-        <Ergebnis lage={lage} />
+        <Ergebnis
+          lage={lage}
+          kunde={kunde ?? (erkennung.stand === "erkannt" ? erkennung.kunde : null)}
+        />
       ) : (
         <div className="flex justify-end">
           <Knopf onClick={schreiben} disabled={lage.art === "laeuft"}>
@@ -363,7 +367,14 @@ export function Antwortformular({
  * Auswählen ist leichter als bewerten — ein einzelner Vorschlag wird zerdacht,
  * zwei nebeneinander erzwingen eine Entscheidung (`MODELL.md` §2b).
  */
-function Ergebnis({ lage }: { lage: Extract<Lage, { art: "fertig" }> }) {
+function Ergebnis({
+  lage,
+  kunde,
+}: {
+  lage: Extract<Lage, { art: "fertig" }>;
+  /** Für die Sprache — sie hängt am Kunden, nicht an einem Schalter. */
+  kunde: KundeKurz | null;
+}) {
   const [gewaehlt, setGewaehlt] = useState<string | null>(null);
   const [kopiert, setKopiert] = useState(false);
 
@@ -402,6 +413,19 @@ function Ergebnis({ lage }: { lage: Extract<Lage, { art: "fertig" }> }) {
             Andere Fassung
           </button>
         </div>
+
+        {/* Erst Deutsch fertig, dann Englisch (`SKILLS.md`, Skill
+            `uebersetzer`): Die Übersetzung startet erst, wenn sie eine
+            Fassung freigegeben hat — nie für eine Mail, die noch wackelt.
+            Und nur, wenn der Kunde Englisch spricht; das steht in der Akte,
+            sie muss nichts umschalten. */}
+        {kunde?.sprache === "en" ? (
+          <EnglischeFassung
+            deutsch={text}
+            kundeId={kunde.id || null}
+            mailId={lage.mailId || null}
+          />
+        ) : null}
       </div>
     );
   }
