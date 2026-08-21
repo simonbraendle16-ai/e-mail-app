@@ -1,5 +1,7 @@
-import Link from "next/link";
 import { Zurueck } from "@/components/zurueck";
+import { Skillmarke } from "@/components/skillmarke";
+import { bezeichnung } from "@/lib/skills/bezeichnungen";
+import { fachSkills } from "@/lib/skills/register";
 import { Knopf, KnopfLink } from "@/components/bausteine/knopf";
 import { Papier, Mailtext } from "@/components/bausteine/papier";
 import { Hinweisstreifen } from "@/components/bausteine/hinweisstreifen";
@@ -38,9 +40,25 @@ const vanDijk = kunden[1]!;
 export default async function ErgebnisSeite({
   searchParams,
 }: {
-  searchParams: Promise<{ gewaehlt?: string; sprache?: string; zustand?: string }>;
+  searchParams: Promise<{
+    gewaehlt?: string;
+    sprache?: string;
+    zustand?: string;
+    skill?: string;
+  }>;
 }) {
-  const { gewaehlt, sprache, zustand } = await searchParams;
+  const { gewaehlt, sprache, zustand, skill } = await searchParams;
+
+  /* Die waehlbaren Skills kommen aus den Dateien unter skills/, nicht aus einer
+     Liste im Code: Eine neue Datei erscheint hier von allein (SKILLS.md). */
+  const waehlbareSkills = fachSkills().map((s) => ({
+    name: s.name,
+    bezeichnung: bezeichnung(s.name),
+  }));
+  const aktiverSkill =
+    skill && waehlbareSkills.some((s) => s.name === skill)
+      ? skill
+      : "liefertermin";
   const englisch = sprache === "en";
   const kunde = englisch ? vanDijk : meier;
   const zeigtVorschlag = zustand === "regelvorschlag";
@@ -57,13 +75,15 @@ export default async function ErgebnisSeite({
       <main className="max-w-seite px-5 py-6">
         <Zurueck nach="/antworten" />
 
-        {/* Sie sieht immer, welcher Skill greift, und kann umschalten. */}
-        <p className="text-m text-text-leise mb-5">
-          Als Liefertermin-Mail behandelt.{" "}
-          <Link href="/antworten" className="text-gruen hover:underline">
-            anders?
-          </Link>
-        </p>
+        {/* Sie sieht immer, welcher Skill greift, und kann umschalten
+            (SKILLS.md). Die Auswahl kommt aus den Skill-Dateien, nicht aus
+            einer Liste im Code — ein neuer Skill erscheint hier von allein. */}
+        <div className="mb-5">
+          <Skillmarke
+            aktiv={{ name: aktiverSkill, bezeichnung: bezeichnung(aktiverSkill) }}
+            auswahl={waehlbareSkills}
+          />
+        </div>
 
         {zahlOhneBeleg ? (
           <div className="mb-5 max-w-inhalt">

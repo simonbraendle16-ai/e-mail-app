@@ -2,7 +2,8 @@
 
 > Stand: 2026-08-21 · Status: **Im Bau. Phase 0 und 1 stehen, Phase 2 abgeschlossen.**
 > Durchlaufen: Anforderungs-Drill ✓ · Spezifikation ✓ · Kreuzverhör ✓ · Freigabe durch den User ✓
-> Gebaut: Fundament ✓ · Design-Prototyp ✓ · Datenmodell ✓ · Modellanbindung ✓ — als Nächstes Phase 4 (Skill-Maschinerie).
+> Gebaut: Fundament ✓ · Design-Prototyp ✓ · Datenmodell ✓ · Modellanbindung ✓ · Skill-Maschinerie ✓
+> — als Nächstes Phase 5 (Verfassen Deutsch).
 > Repo: https://github.com/simonbraendle16-ai/e-mail-app (privat)
 > Dieses Dokument ist die verbindliche Projekt-Referenz. Was hier steht, ist entschieden.
 

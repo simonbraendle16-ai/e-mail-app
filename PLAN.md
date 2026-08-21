@@ -1,7 +1,7 @@
 # Umsetzungsplan — E-Mail-App
 
 > Stand: 2026-08-21 · Grundlage: `CLAUDE.md` (Anforderungen nach Drill)
-> Status: **freigegeben, im Bau.** Phase 0 bis 3 sind fertig.
+> Status: **freigegeben, im Bau.** Phase 0 bis 4 sind fertig.
 
 ---
 
@@ -306,7 +306,7 @@ Nichts davon blockiert den Start — es macht das Ergebnis nur besser.
 | Risiko | Umgang |
 |---|---|
 | Regelableitung aus Textänderungen rät falsch | Regeln wirken erst nach ihrer Bestätigung; im Zweifel trägt Weg 1 die Funktion allein |
-| ~~Pseudonymisierung verschlechtert die Qualität der Formulierung~~ *(in Phase 3 geprüft und behoben)* | **Ja, sie verschlechterte sie — messbar.** Vier Fälle je zweimal formuliert, mit Klarnamen gegen pseudonymisiert. Zwei systematische Fehler: doppelte Anrede („Hallo Herr Herr Meier") in drei von vier Fällen, und in einem Fall ging die Antwort an *sie selbst* statt an die Kundin, weil ihr Name als einziger im Klartext dastand. Beide Ursachen behoben (Anrede abtrennen, eigenen Namen mitpseudonymisieren) — danach alle vier sauber. Die engere Variante war nicht nötig. Belege:  |
+| ~~Pseudonymisierung verschlechtert die Qualität der Formulierung~~ *(in Phase 3 geprüft und behoben)* | **Ja, sie verschlechterte sie — messbar.** Vier Fälle je zweimal formuliert, mit Klarnamen gegen pseudonymisiert. Zwei systematische Fehler: doppelte Anrede („Hallo Herr Herr Meier") in drei von vier Fällen, und in einem Fall ging die Antwort an *sie selbst* statt an die Kundin, weil ihr Name als einziger im Klartext dastand. Beide Ursachen behoben (Anrede abtrennen, eigenen Namen mitpseudonymisieren) — danach alle vier sauber. Die engere Variante war nicht nötig. Belege: `nachweise/` |
 | Kosten laufen weg | Kleine Modelle für alles außer Formulierung, Kostenprotokoll ab Phase 2, Warnung bei Überschreitung |
 | Copy & Paste nervt im Alltag | Zeigt sich erst im Echtbetrieb. Ein Outlook-Add-in bliebe der Ausweg, wäre aber ein großer Umbau |
 | Supabase ist ein US-Konzern | EU-Region, Verschlüsselung sensibler Felder, Pseudonymisierung gegenüber dem Modell |

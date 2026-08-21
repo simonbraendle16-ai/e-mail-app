@@ -12,3 +12,6 @@ next-env.d.ts
 .vercel/
 cloudflare-env.d.ts
 tsconfig.tsbuildinfo
+
+# Wird von skripte/skills-einlesen.mjs erzeugt (laeuft vor dev/build/test)
+lib/skills/inhalte.gen.ts

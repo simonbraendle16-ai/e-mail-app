@@ -13,7 +13,11 @@
     "test:watch": "vitest",
     "vorschau": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
     "ausliefern": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
-    "cf-typen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts"
+    "cf-typen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
+    "skills": "node skripte/skills-einlesen.mjs",
+    "predev": "node skripte/skills-einlesen.mjs",
+    "prebuild": "node skripte/skills-einlesen.mjs",
+    "pretest": "node skripte/skills-einlesen.mjs"
   },
   "dependencies": {
     "@opennextjs/cloudflare": "^1.20.2",
