@@ -1,13 +1,22 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Knopf } from "@/components/bausteine/knopf";
 import { Textbereich } from "@/components/bausteine/feld";
 import { Hinweisstreifen } from "@/components/bausteine/hinweisstreifen";
-import { Kundenmarke } from "@/components/bausteine/kundenmarke";
 import { Papier, Mailtext } from "@/components/bausteine/papier";
 import { Skillmarke } from "@/components/skillmarke";
 import type { SkillAnzeige } from "@/components/skillmarke";
+import {
+  Kundenwahl,
+  type Erkennungslage,
+  type KundeKurz,
+} from "@/components/kundenwahl";
+import {
+  entwurfLesen,
+  entwurfSichern,
+  entwurfVergessen,
+} from "@/lib/entwurf-sichern";
 
 /**
  * Der Bildschirm, auf dem sie den Tag verbringt (`DESIGN.md` §5).
@@ -15,9 +24,6 @@ import type { SkillAnzeige } from "@/components/skillmarke";
  * Drei Bereiche untereinander: Kundenmail einfügen · was sie sagen will ·
  * fertige Antwort. Während gearbeitet wird, steht **eine Zeile Text**, die
  * sagt, was gerade passiert — kein Ladekreis, keine Prozentzahl.
- *
- * Der Text läuft ein, während er entsteht. Das ist der Kern gegen die
- * Grübelschleife (`CLAUDE.md` §1).
  */
 
 type Lage =
@@ -34,21 +40,98 @@ type Lage =
 
 export function Antwortformular({
   waehlbareSkills,
+  alleKunden,
   neueMail,
 }: {
   waehlbareSkills: SkillAnzeige[];
+  alleKunden: KundeKurz[];
   neueMail: boolean;
 }) {
   const [lage, setLage] = useState<Lage>({ art: "bereit" });
-  const [kunde, setKunde] = useState<{
-    name: string | null;
-    sprache: "de" | "en";
-  } | null>(null);
+  const [erkennung, setErkennung] = useState<Erkennungslage>({ stand: "still" });
+  const [kunde, setKunde] = useState<KundeKurz | null>(null);
   const [skill, setSkill] = useState<SkillAnzeige | null>(null);
+  const [wiederhergestellt, setWiederhergestellt] = useState(false);
 
   const eingehend = useRef<HTMLTextAreaElement>(null);
   const stichworte = useRef<HTMLTextAreaElement>(null);
   const abbruch = useRef<AbortController | null>(null);
+
+  /* Was sie zuletzt getippt hat, zurückholen. Läuft genau einmal beim Öffnen.
+   *
+   * Der Effekt setzt Zustand, und die Regel `set-state-in-effect` mahnt das
+   * zu Recht an — sie schützt vor Schleifen, in denen ein Effekt sich selbst
+   * neu auslöst. Hier greift das nicht: `localStorage` steht im Server nicht
+   * zur Verfügung, der Wert kann also erst nach dem Einhängen gelesen werden,
+   * und die leere Abhängigkeitsliste lässt den Effekt genau einmal laufen.
+   * Die Alternative wäre, ihr das Zurückholen als Knopf anzubieten — und
+   * `MODELL.md` §5 sagt ausdrücklich, dass kein Ausfall sie Tipparbeit kosten
+   * darf. Ein Knopf, den sie erst finden muss, erfüllt das nicht.
+   */
+  /* eslint-disable react-hooks/set-state-in-effect */
+  useEffect(() => {
+    const entwurf = entwurfLesen();
+    if (!entwurf) return;
+
+    if (eingehend.current) eingehend.current.value = entwurf.eingehenderText;
+    if (stichworte.current) stichworte.current.value = entwurf.stichworte;
+
+    if (entwurf.kundeId) {
+      const gefunden = alleKunden.find((k) => k.id === entwurf.kundeId);
+      if (gefunden) setKunde(gefunden);
+    }
+
+    setWiederhergestellt(true);
+    /* Absichtlich ohne Abhängigkeiten: einmal beim Öffnen, nie wieder. */
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  /* eslint-enable react-hooks/set-state-in-effect */
+
+  function sichern() {
+    entwurfSichern({
+      eingehenderText: eingehend.current?.value ?? "",
+      stichworte: stichworte.current?.value ?? "",
+      kundeId: kunde?.id ?? null,
+    });
+  }
+
+  /** Erkennt beim Verlassen des Feldes, von wem die Mail ist. */
+  async function erkennen() {
+    const text = eingehend.current?.value.trim() ?? "";
+    sichern();
+
+    if (kunde) return;
+
+    /* Leert sie das Feld wieder, gehört die Kundenzeile auch wieder weg —
+       sonst bliebe eine Aussage stehen, zu der es keinen Text mehr gibt. */
+    if (!text) {
+      setErkennung({ stand: "still" });
+      return;
+    }
+
+    setErkennung({ stand: "sucht" });
+    try {
+      const antwort = await fetch("/api/kunde-erkennen", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text }),
+      });
+
+      /* Bei einer Fehlerantwort (abgelaufene Anmeldung, Serverfehler) steht im
+         Rumpf keine Erkennungslage, sondern eine Fehlermeldung. Die ungeprüft
+         zu übernehmen ergäbe einen Zustand, den `Kundenwahl` nicht kennt — die
+         Zeile verschwände wortlos. Sie soll aber sehen, dass die Frage offen
+         ist, statt dass die App stumm wird. */
+      const gelesen = antwort.ok ? await antwort.json() : null;
+      const gueltig =
+        gelesen &&
+        ["erkannt", "mehrdeutig", "unbekannt"].includes(gelesen.stand);
+
+      setErkennung(gueltig ? gelesen : { stand: "unbekannt" });
+    } catch {
+      setErkennung({ stand: "unbekannt" });
+    }
+  }
 
   async function schreiben() {
     const stichwortText = stichworte.current?.value.trim() ?? "";
@@ -61,11 +144,15 @@ export function Antwortformular({
       return;
     }
 
+    /* Sichern, BEVOR der Aufruf startet (MODELL.md §5). Fällt jetzt etwas
+       aus, ist ihre Tipparbeit trotzdem noch da. */
+    sichern();
+    setWiederhergestellt(false);
+
     abbruch.current?.abort();
     abbruch.current = new AbortController();
 
     setLage({ art: "laeuft", schritt: "Einen Moment.", text: "" });
-    setKunde(null);
     setSkill(null);
 
     try {
@@ -76,6 +163,7 @@ export function Antwortformular({
         body: JSON.stringify({
           eingehenderText: neueMail ? undefined : eingehend.current?.value,
           stichworte: stichwortText,
+          kundeId: kunde?.id ?? null,
           skillName: skill?.name,
         }),
       });
@@ -118,7 +206,16 @@ export function Antwortformular({
                 setLage({ art: "laeuft", schritt, text: gesammelt });
                 break;
               case "kunde":
-                setKunde({ name: nachricht.name, sprache: nachricht.sprache });
+                if (nachricht.name && !kunde) {
+                  setErkennung({
+                    stand: "erkannt",
+                    kunde: {
+                      id: "",
+                      name: nachricht.name,
+                      sprache: nachricht.sprache,
+                    },
+                  });
+                }
                 break;
               case "skill":
                 setSkill({
@@ -138,6 +235,8 @@ export function Antwortformular({
                   ausfuehrlich: nachricht.ausfuehrlich,
                   warnungen: nachricht.warnungen ?? [],
                 });
+                /* Erst wenn die Mail steht, ist der Entwurf entbehrlich. */
+                entwurfVergessen();
                 break;
               case "fehler":
                 setLage({ art: "fehler", text: nachricht.text });
@@ -159,28 +258,37 @@ export function Antwortformular({
 
   return (
     <div className="flex flex-col gap-5">
-      {/* Der Kunde: Feststellung, nicht Auswahlliste. */}
-      {kunde ? (
-        <div className="flex items-center gap-3">
-          <span className="text-s text-text-leise font-semibold">Kunde</span>
-          {kunde.name ? (
-            <Kundenmarke name={kunde.name} sprache={kunde.sprache} />
-          ) : (
-            <span className="text-m text-text-leise">
-              noch offen — ich schreibe ohne Vorwissen
-            </span>
-          )}
-        </div>
+      {wiederhergestellt ? (
+        <Hinweisstreifen>
+          Dein letzter Text war noch da — ich habe ihn zurückgeholt.
+        </Hinweisstreifen>
       ) : null}
 
+      {neueMail ? null : (
+        <Kundenwahl
+          lage={erkennung}
+          gewaehlt={kunde}
+          alleKunden={alleKunden}
+          beiWahl={(gewaehlt) => {
+            setKunde(gewaehlt);
+            setErkennung({ stand: "still" });
+            sichern();
+          }}
+        />
+      )}
+
       {skill ? (
-        <Skillmarke aktiv={skill} auswahl={waehlbareSkills} beiWechsel={(name) => {
-          const gewaehlt = waehlbareSkills.find((s) => s.name === name);
-          if (gewaehlt) {
-            setSkill(gewaehlt);
-            void schreiben();
-          }
-        }} />
+        <Skillmarke
+          aktiv={skill}
+          auswahl={waehlbareSkills}
+          beiWechsel={(name) => {
+            const gewaehlt = waehlbareSkills.find((s) => s.name === name);
+            if (gewaehlt) {
+              setSkill(gewaehlt);
+              void schreiben();
+            }
+          }}
+        />
       ) : null}
 
       {neueMail ? null : (
@@ -190,6 +298,7 @@ export function Antwortformular({
           ref={eingehend}
           rows={8}
           placeholder="Die Mail hier einfügen."
+          onBlur={erkennen}
         />
       )}
 
@@ -199,6 +308,7 @@ export function Antwortformular({
         ref={stichworte}
         rows={3}
         placeholder="Lieferung geht Freitag raus"
+        onBlur={sichern}
       />
 
       {lage.art === "laeuft" ? (
@@ -240,17 +350,24 @@ export function Antwortformular({
  * Auswählen ist leichter als bewerten — ein einzelner Vorschlag wird zerdacht,
  * zwei nebeneinander erzwingen eine Entscheidung (`MODELL.md` §2b).
  */
-function Ergebnis({
-  lage,
-}: {
-  lage: Extract<Lage, { art: "fertig" }>;
-}) {
+function Ergebnis({ lage }: { lage: Extract<Lage, { art: "fertig" }> }) {
   const [gewaehlt, setGewaehlt] = useState<string | null>(null);
+  const [kopiert, setKopiert] = useState(false);
 
   const fassungen = [
     { marke: "knapp", titel: "Knapp", text: lage.knapp },
     { marke: "ausfuehrlich", titel: "Ausführlicher", text: lage.ausfuehrlich },
   ].filter((f) => f.text.trim());
+
+  async function kopieren(text: string) {
+    try {
+      await navigator.clipboard.writeText(text);
+      setKopiert(true);
+      setTimeout(() => setKopiert(false), 2000);
+    } catch {
+      /* Ohne Zwischenablage kann sie den Text markieren und selbst kopieren. */
+    }
+  }
 
   if (gewaehlt) {
     const text = fassungen.find((f) => f.marke === gewaehlt)?.text ?? lage.knapp;
@@ -262,13 +379,17 @@ function Ergebnis({
         <Papier>
           <Mailtext text={text} />
         </Papier>
-        <div className="flex gap-3">
-          <Knopf onClick={() => navigator.clipboard?.writeText(text)}>
-            Kopieren
+        <div className="flex items-center gap-5">
+          <Knopf onClick={() => kopieren(text)}>
+            {kopiert ? "Kopiert" : "Kopieren"}
           </Knopf>
-          <Knopf art="text" onClick={() => setGewaehlt(null)}>
+          <button
+            type="button"
+            onClick={() => setGewaehlt(null)}
+            className="text-m text-gruen hover:underline"
+          >
             Andere Fassung
-          </Knopf>
+          </button>
         </div>
       </div>
     );

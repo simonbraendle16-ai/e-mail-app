@@ -1,5 +1,6 @@
 import { bezeichnung } from "@/lib/skills/bezeichnungen";
 import { fachSkills } from "@/lib/skills/register";
+import { alleKunden } from "@/lib/db/kunden";
 import { Antwortformular } from "./formular";
 
 export const metadata = { title: "Antwort schreiben" };
@@ -28,13 +29,32 @@ export default async function AntwortenSeite({
     bezeichnung: bezeichnung(s.name),
   }));
 
+  /* Für die Kundenauswahl, wenn die Erkennung danebenliegt oder nichts findet.
+     Entschlüsselt im Server — der Browser sieht nur Name und Sprache, keine
+     Geheimtexte. Ein Ausfall darf sie nicht am Schreiben hindern, deshalb
+     eingepackt. */
+  let kunden: { id: string; name: string; sprache: "de" | "en" }[] = [];
+  try {
+    kunden = (await alleKunden()).map((k) => ({
+      id: k.id,
+      name: k.anzeigename,
+      sprache: k.sprache === "en" ? "en" : "de",
+    }));
+  } catch {
+    kunden = [];
+  }
+
   return (
     <main className="max-w-inhalt px-5 py-6">
       <h1 className="text-xl font-semibold mb-5">
         {neueMail ? "Neue Mail schreiben" : "Antwort schreiben"}
       </h1>
 
-      <Antwortformular waehlbareSkills={waehlbareSkills} neueMail={neueMail} />
+      <Antwortformular
+        waehlbareSkills={waehlbareSkills}
+        alleKunden={kunden}
+        neueMail={neueMail}
+      />
     </main>
   );
 }

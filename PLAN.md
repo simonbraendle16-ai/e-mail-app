@@ -153,8 +153,9 @@ Indizes: HNSW auf `embedding`, GIN auf `tsv`, B-Tree auf `customer_id`.
 
 ```
 1  Eingehende Mail einfügen
-        └─► Analyse (Small 3.1, günstig): Anliegen, Ton, Dringlichkeit, Kundenerkennung
+        └─► Kundenerkennung (kein Modell): Abgleich gegen den Bestand
               └─► Kundenvorschlag: „Ist das Meier & Co.?"  (sie bestätigt mit einem Klick)
+        └─► Skill-Auswahl (Signalwörter, nur bei Uneindeutigkeit ein kleiner Aufruf)
 
 2  Kontext zusammenstellen (kein LLM, reine Datenbankarbeit)
         ├─ Kundenakte + alle bestätigten customer_facts
@@ -187,7 +188,17 @@ Indizes: HNSW auf `embedding`, GIN auf `tsv`, B-Tree auf `customer_id`.
         └─ Glossarkandidaten vorschlagen
 ```
 
-**Modellzuordnung:** Small 3.1 für Analyse, Prüfungen und Extraktion; Large 3 nur für Formulierung
+**In Phase 5 gestrichen: die eigene Analyse von Ton und Dringlichkeit.**
+Ursprünglich stand hier ein Analyseschritt („Anliegen, Ton, Dringlichkeit"). Er ist entfallen,
+und zwar nicht aus Sparsamkeit: Das Modell bekommt die eingegangene Mail beim Formulieren
+**vollständig** zu sehen. Ton und Dringlichkeit stehen also ohnehin vor ihm. Ein
+vorgeschalteter Aufruf würde dieselbe Information ein zweites Mal beschaffen, in Worte fassen
+(„der Kunde klingt gereizt") und diese Worte dann wieder ins Modell geben — mit dem Risiko,
+dass die Zusammenfassung danebenliegt und die Fehldeutung sich verfestigt.
+
+Das Anliegen deckt die Skill-Auswahl ab. Entscheidung des Users in Phase 5.
+
+**Modellzuordnung:** Small 3.1 für Prüfungen und Extraktion; Large 3 nur für Formulierung
 und Übersetzung. Das ist der Hebel, der die Kosten im niedrigen zweistelligen Bereich hält, ohne
 dass die Qualität dort leidet, wo sie zählt.
 
