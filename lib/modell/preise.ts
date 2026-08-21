@@ -33,6 +33,16 @@ export const PREISE: Record<string, Preis> = {
 };
 
 /**
+ * Anteil, den ein zwischengespeichertes Eingabe-Token kostet.
+ *
+ * Mistral rechnet gecachte Eingabe-Token mit rund einem Zehntel des normalen
+ * Satzes ab. Ohne diesen Faktor zeigte die Kostenübersicht deutlich zu hohe
+ * Werte — und eine Anzeige, die dauerhaft über der Rechnung liegt, wird
+ * genauso schnell ignoriert wie eine, die darunter liegt.
+ */
+const ZWISCHENSPEICHER_ANTEIL = 0.1;
+
+/**
  * Was ein Aufruf gekostet hat.
  * Unbekanntes Modell → 0. Lieber eine Lücke in der Anzeige als eine
  * erfundene Zahl, die nach Gewissheit aussieht.
@@ -41,8 +51,19 @@ export function kostenBerechnen(
   modell: string,
   tokenEin: number,
   tokenAus: number,
+  /** Davon aus dem Zwischenspeicher — kosten nur einen Bruchteil. */
+  tokenZwischenspeicher = 0,
 ): number {
   const preis = PREISE[modell];
   if (!preis) return 0;
-  return (tokenEin / 1_000_000) * preis.ein + (tokenAus / 1_000_000) * preis.aus;
+
+  /* Nie unter null: Sollte der Dienst je mehr gecachte als gesamte Token
+     melden, wäre eine negative Rechnung das falsche Ergebnis. */
+  const voll = Math.max(0, tokenEin - tokenZwischenspeicher);
+
+  return (
+    (voll / 1_000_000) * preis.ein +
+    (tokenZwischenspeicher / 1_000_000) * preis.ein * ZWISCHENSPEICHER_ANTEIL +
+    (tokenAus / 1_000_000) * preis.aus
+  );
 }

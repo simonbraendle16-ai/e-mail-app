@@ -1,6 +1,7 @@
 import "server-only";
 import { nurServer } from "@/lib/umgebung";
 import { OpenAiKompatiblerAnbieter } from "./openai-kompatibel";
+import { ModellFehler } from "./schnittstelle";
 import type { ModellAnbieter } from "./schnittstelle";
 
 /**
@@ -84,13 +85,38 @@ let zwischengespeichert: ModellAnbieter | undefined;
 /**
  * Der eingestellte Anbieter. Wird einmal gebaut und behalten — jeder Aufruf
  * würde sonst die Umgebungsvariablen neu einlesen und den Schlüssel neu prüfen.
+ *
+ * Fehlt der Schlüssel, kommt ein `ModellFehler` mit einem Satz, den sie lesen
+ * kann — kein roher Programmfehler. Das ist kein Netzproblem, sondern etwas,
+ * das einmal eingerichtet werden muss, und beides braucht verschiedene Sätze.
  */
 export function anbieter(): ModellAnbieter {
   if (zwischengespeichert) return zwischengespeichert;
 
   const gewaehlt = (process.env.MODELL_ANBIETER ?? "mistral").toLowerCase();
-  zwischengespeichert = gewaehlt === "lokal" ? lokal() : mistral();
+  try {
+    zwischengespeichert = gewaehlt === "lokal" ? lokal() : mistral();
+  } catch (fehler) {
+    throw new ModellFehler(
+      "Die App ist noch nicht fertig eingerichtet. Sag deinem Sohn Bescheid — es fehlt ein Zugang.",
+      fehler instanceof Error ? fehler.message : String(fehler),
+      fehler,
+    );
+  }
   return zwischengespeichert;
+}
+
+/**
+ * Ob überhaupt ein Anbieter eingerichtet ist.
+ * Für Anzeigen, die auch ohne Modellzugang stehen bleiben sollen.
+ */
+export function anbieterEingerichtet(): boolean {
+  try {
+    anbieter();
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 /** Nur für Tests: erzwingt den Neuaufbau beim nächsten Zugriff. */

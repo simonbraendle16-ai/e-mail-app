@@ -1,6 +1,11 @@
 import "server-only";
 import { kostenBerechnen } from "./preise";
-import { HttpFehler, mitWiederholung, uebersetzeFehler } from "./wiederholen";
+import {
+  HttpFehler,
+  LeereAntwortFehler,
+  mitWiederholung,
+  uebersetzeFehler,
+} from "./wiederholen";
 import type {
   Antwort,
   Auftrag,
@@ -42,6 +47,10 @@ function rolle(n: Nachricht): "system" | "user" | "assistant" {
 type Verwendung = {
   prompt_tokens?: number;
   completion_tokens?: number;
+  /* Mistral meldet hier, wie viele Eingabe-Token aus dem Zwischenspeicher
+     kamen. Ohne diese Zahl rechnet die Kostenanzeige deutlich zu hoch --
+     im Versuch waren 272 von 312 Token gecacht. */
+  prompt_tokens_details?: { cached_tokens?: number };
 };
 
 export class OpenAiKompatiblerAnbieter implements ModellAnbieter {
@@ -64,11 +73,13 @@ export class OpenAiKompatiblerAnbieter implements ModellAnbieter {
   private verbrauch(modell: string, verwendung?: Verwendung): Verbrauch {
     const tokenEin = verwendung?.prompt_tokens ?? 0;
     const tokenAus = verwendung?.completion_tokens ?? 0;
+    const gecacht = verwendung?.prompt_tokens_details?.cached_tokens ?? 0;
     return {
       modell,
       tokenEin,
       tokenAus,
-      kostenEur: kostenBerechnen(modell, tokenEin, tokenAus),
+      tokenZwischenspeicher: gecacht,
+      kostenEur: kostenBerechnen(modell, tokenEin, tokenAus, gecacht),
     };
   }
 
@@ -102,6 +113,36 @@ export class OpenAiKompatiblerAnbieter implements ModellAnbieter {
     return antwort;
   }
 
+  /**
+   * Baut den Anfragerumpf. Einmal, weil Streaming und Nicht-Streaming sich
+   * nur in einem Feld unterscheiden -- zweimal fast gleich wuerde bedeuten,
+   * dass eine Aenderung irgendwann nur an einer Stelle ankommt.
+   */
+  private rumpfBauen(auftrag: Auftrag, modell: string, stroemend: boolean) {
+    const rumpf: Record<string, unknown> = {
+      model: modell,
+      messages: auftrag.nachrichten.map((n) => ({
+        role: rolle(n),
+        content: n.inhalt,
+      })),
+      max_tokens: auftrag.hoechstlaenge ?? 4096,
+      temperature: auftrag.streuung ?? 0.3,
+      stream: stroemend,
+    };
+
+    /* Prompt-Caching (MODELL.md 7): rund 90 % Nachlass auf Eingabe-Token, die
+       Mistral aus einem zwischengespeicherten Praefix wiederverwenden kann.
+       Muss angefordert werden, passiert nicht von allein. Der Schluessel wird
+       nur mitgeschickt, wenn die aufrufende Stelle einen nennt -- ein geratener
+       Schluessel waere schlimmer als keiner, weil er Aufrufe zusammenwirft,
+       deren Praefix gar nicht gleich ist. */
+    if (auftrag.zwischenspeicherSchluessel) {
+      rumpf.prompt_cache_key = auftrag.zwischenspeicherSchluessel;
+    }
+
+    return rumpf;
+  }
+
   /** Ein Aufruf, der auf die vollständige Antwort wartet. */
   private async einmal(auftrag: Auftrag): Promise<Antwort> {
     const modell = this.einst.modelle[auftrag.stufe];
@@ -109,16 +150,7 @@ export class OpenAiKompatiblerAnbieter implements ModellAnbieter {
     return mitWiederholung(async () => {
       const antwort = await this.anfragen(
         "/chat/completions",
-        {
-          model: modell,
-          messages: auftrag.nachrichten.map((n) => ({
-            role: rolle(n),
-            content: n.inhalt,
-          })),
-          max_tokens: auftrag.hoechstlaenge ?? 4096,
-          temperature: auftrag.streuung ?? 0.3,
-          stream: false,
-        },
+        this.rumpfBauen(auftrag, modell, false),
         auftrag.abbruch,
       );
 
@@ -131,7 +163,7 @@ export class OpenAiKompatiblerAnbieter implements ModellAnbieter {
       if (!text.trim()) {
         /* MODELL.md §5: leere Antwort -> ein Neuversuch, dann ehrliche
            Meldung. Der Wurf hier löst genau diesen Neuversuch aus. */
-        throw new HttpFehler(502, "Die Antwort war leer.");
+        throw new LeereAntwortFehler("Die Antwort war leer.");
       }
 
       return { text, verbrauch: this.verbrauch(modell, daten.usage) };
@@ -151,16 +183,7 @@ export class OpenAiKompatiblerAnbieter implements ModellAnbieter {
     try {
       antwort = await this.anfragen(
         "/chat/completions",
-        {
-          model: modell,
-          messages: auftrag.nachrichten.map((n) => ({
-            role: rolle(n),
-            content: n.inhalt,
-          })),
-          max_tokens: auftrag.hoechstlaenge ?? 4096,
-          temperature: auftrag.streuung ?? 0.3,
-          stream: true,
-        },
+        this.rumpfBauen(auftrag, modell, true),
         auftrag.abbruch,
       );
     } catch (fehler) {

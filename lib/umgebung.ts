@@ -55,7 +55,7 @@ export function nurServer(name: string): string {
   const wert = process.env[name];
   if (!wert) {
     throw new Error(
-      `${name} fehlt. Trage den Wert in .env.local ein — siehe SUPABASE-SETUP.md.`,
+      `${name} fehlt. Trage den Wert in .env ein — Vorlage: .env.local.beispiel.`,
     );
   }
   return wert;

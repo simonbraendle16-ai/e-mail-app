@@ -266,7 +266,13 @@ die deine Mutter besser beantwortet als jede Maschine — und die einzige, auf d
 - Jeder Aufruf wird protokolliert: Modell, Zweck, Token, geschätzte Kosten
 - Ein Bildschirm zeigt dir den laufenden Monat
 - Warnschwelle einstellbar, Vorgabe 25 €
-- Prompt-Caching für die festen Blöcke 1 bis 3, die sich zwischen Aufrufen kaum ändern
+- Prompt-Caching für die festen Blöcke 1 bis 3, die sich zwischen Aufrufen kaum ändern.
+  **In Phase 3 gebaut und gemessen:** Mistral cacht nicht von allein — es braucht einen
+  `prompt_cache_key` bei der Anfrage. Gemessen: zweiter Aufruf mit gleichem Systemblock,
+  272 von 312 Eingabe-Token aus dem Zwischenspeicher (87 %). Gecachte Token kosten rund ein
+  Zehntel; die Kostenrechnung berücksichtigt das, sonst läge die Anzeige dauerhaft über der
+  Rechnung. Den Schlüssel setzt die aufrufende Stelle, nicht der Adapter — nur sie weiß,
+  welche Blöcke sie unverändert lässt.
 - Kontextzusammenstellung mit festen Obergrenzen (`SKILLS.md` §6), damit ein Kunde mit
   200 Mails nicht plötzlich das Zehnfache kostet
 

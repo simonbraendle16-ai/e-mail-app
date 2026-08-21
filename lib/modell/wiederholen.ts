@@ -36,6 +36,20 @@ export class HttpFehler extends Error {
   }
 }
 
+/**
+ * Der Dienst hat geantwortet, aber nichts Brauchbares geliefert.
+ *
+ * Eigener Typ, weil `MODELL.md` §5 hier ausdrücklich **einen** Neuversuch
+ * vorsieht, nicht die vollen drei: Wenn das Modell zweimal nichts sagt, sagt
+ * ein drittes Mal auch nichts — es kostet nur einen weiteren teuren Aufruf.
+ */
+export class LeereAntwortFehler extends Error {
+  constructor(grund: string) {
+    super(grund);
+    this.name = "LeereAntwortFehler";
+  }
+}
+
 function schlafen(ms: number, abbruch?: AbortSignal): Promise<void> {
   return new Promise((fertig, scheitern) => {
     if (abbruch?.aborted) return scheitern(new Error("abgebrochen"));
@@ -64,6 +78,14 @@ export async function mitWiederholung<T>(
       letzterFehler = fehler;
 
       if (abbruch?.aborted) throw fehler;
+
+      /* Leere Antwort: genau ein Neuversuch (`MODELL.md` §5), also nach dem
+         zweiten Durchlauf Schluss. */
+      if (fehler instanceof LeereAntwortFehler) {
+        if (versuch >= 2) break;
+        await schlafen(GRUNDWARTEZEIT_MS, abbruch);
+        continue;
+      }
 
       const status = fehler instanceof HttpFehler ? fehler.status : undefined;
       if (!lohntWiederholung(status)) break;
@@ -98,6 +120,25 @@ export function uebersetzeFehler(fehler: unknown): ModellFehler {
 
   const status = fehler instanceof HttpFehler ? fehler.status : undefined;
   const technisch = fehler instanceof Error ? fehler.message : String(fehler);
+
+  if (fehler instanceof LeereAntwortFehler) {
+    return new ModellFehler(
+      "Da kam nichts zurück. Probier es nochmal — meistens klappt es beim zweiten Versuch.",
+      technisch,
+      fehler,
+    );
+  }
+
+  /* Ein fehlender Schlüssel ist kein Netzproblem, sondern etwas, das einmal
+     eingerichtet werden muss. Ohne diesen Zweig sähe sie einen rohen
+     Programmfehler statt eines Satzes (`MODELL.md` §5, `DESIGN.md` §7). */
+  if (/fehlt\. Trage den Wert/.test(technisch)) {
+    return new ModellFehler(
+      "Die App ist noch nicht fertig eingerichtet. Sag deinem Sohn Bescheid — es fehlt ein Zugang.",
+      technisch,
+      fehler,
+    );
+  }
 
   if (status === 401 || status === 403) {
     return new ModellFehler(

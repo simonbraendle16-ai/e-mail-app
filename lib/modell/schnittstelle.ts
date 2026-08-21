@@ -52,12 +52,30 @@ export type Auftrag = {
   streuung?: number;
   /** Bricht den Aufruf ab, wenn die Nutzerin die Seite verlässt. */
   abbruch?: AbortSignal;
+  /**
+   * Schlüssel für das Prompt-Caching (`MODELL.md` §7).
+   *
+   * Mistral gewährt rund 90 % Nachlass auf Eingabe-Token, die es aus einem
+   * zwischengespeicherten Präfix wiederverwenden kann — und das muss man
+   * anfordern, es passiert nicht von allein.
+   *
+   * Der Schlüssel muss über gleichartige Aufrufe hinweg **stabil** sein und
+   * darf nichts Wechselndes enthalten. Genau deshalb steht er hier und wird
+   * nicht im Adapter geraten: Nur die aufrufende Stelle weiß, welche Blöcke
+   * sie unverändert lässt.
+   */
+  zwischenspeicherSchluessel?: string;
 };
 
 export type Verbrauch = {
   modell: string;
   tokenEin: number;
   tokenAus: number;
+  /**
+   * Wie viele der Eingabe-Token aus dem Zwischenspeicher kamen.
+   * Sie stecken in `tokenEin` mit drin, kosten aber nur einen Bruchteil.
+   */
+  tokenZwischenspeicher: number;
   kostenEur: number;
 };
 

@@ -1,5 +1,5 @@
 import "server-only";
-import { anbieter } from "./anbieter";
+import { anbieter, anbieterEingerichtet } from "./anbieter";
 import { protokollieren } from "./kosten";
 import {
   pseudonymisieren,
@@ -174,7 +174,11 @@ export async function einbetten(angaben: {
   return vektoren;
 }
 
-/** Welcher Anbieter gerade läuft. Für die Wartungsanzeige. */
+/**
+ * Welcher Anbieter gerade läuft. Für die Wartungsanzeige.
+ * Gibt einen Text zurück statt zu werfen -- eine Anzeige darf nie der Grund
+ * sein, warum ein Bildschirm abstürzt.
+ */
 export function anbieterName(): string {
-  return anbieter().name;
+  return anbieterEingerichtet() ? anbieter().name : "nicht eingerichtet";
 }
