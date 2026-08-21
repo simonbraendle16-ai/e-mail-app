@@ -29,7 +29,7 @@
 - **Supabase-Projekt**, Region `eu-central-1` (Frankfurt) — Projekt-URL und Schlüssel
 - **Mistral-API-Key** — trägt der User selbst in `.env.local` ein, muss nicht sichtbar werden
 
-Beides wird in Phase 0 gebraucht. Bis dahin kann ohne beides begonnen werden.
+Beides wird in Phase 0 gebraucht. Klickfolge für Supabase: `SUPABASE-SETUP.md`.
 
 ## Regeln für den Bau
 
