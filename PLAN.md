@@ -137,6 +137,15 @@ Indizes: HNSW auf `embedding`, GIN auf `tsv`, B-Tree auf `customer_id`.
 - An Mistral gehen Kundennamen **pseudonymisiert** (`[Kunde]`, `[Ansprechpartner]`), Rückersetzung
   passiert erst im Server nach der Antwort. Kostet nichts an Qualität, nimmt aber das meiste Risiko raus.
 - Löschfunktion pro Kunde und pro Mail, kaskadierend inklusive Chunks. Vollständiger Datenexport als JSON.
+  **In der Validierung nach Phase 2 als Lücke gefunden und geschlossen:** Die Kaskade auf die
+  Chunks fehlte. Sie lässt sich nicht als Fremdschlüssel bauen, weil `chunks.quelle_id` je nach
+  `quelle_art` auf verschiedene Tabellen zeigt. Jetzt erledigen das Trigger (Migration 0008) —
+  die greifen auch, wenn jemand direkt in der Datenbank löscht. Nachgewiesen: Mail mit drei
+  Abschnitten angelegt, gelöscht, null Abschnitte übrig.
+  Ohne diese Kaskade wäre eine gelöschte Mail aus der Liste verschwunden, ihr Text aber weiter
+  im Gedächtnis der App gewesen — und damit weiter an Mistral gegangen.
+  Der Export liegt unter `/export` (`lib/db/export.ts`): Kundennamen entschlüsselt, technische
+  Suchwerte und Einbettungsvektoren weggelassen, weil sie keine lesbare Aussage enthalten.
 
 ---
 

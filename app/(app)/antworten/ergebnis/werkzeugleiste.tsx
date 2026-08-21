@@ -46,11 +46,11 @@ export function Werkzeugleiste({ kundenname }: { kundenname: string }) {
             „Was hat nicht gepasst?". Ein Klick, kein Formular. */}
         <div className="ml-auto flex items-center gap-3">
           {bewertung === "gut" ? (
-            <span className="text-m text-text-leise animate-auftauchen">
+            <span className="text-m text-text-leise">
               Gemerkt.
             </span>
           ) : bewertung === "schlecht" ? (
-            <span className="text-m text-text-leise animate-auftauchen">
+            <span className="text-m text-text-leise">
               Sag unten, was nicht gepasst hat.
             </span>
           ) : (
@@ -82,7 +82,7 @@ export function Werkzeugleiste({ kundenname }: { kundenname: string }) {
       </div>
 
       {korrekturOffen ? (
-        <div className="flex flex-col gap-3 animate-auftauchen">
+        <div className="flex flex-col gap-3">
           <Textbereich
             beschriftung="Passt nicht?"
             name="korrektur"

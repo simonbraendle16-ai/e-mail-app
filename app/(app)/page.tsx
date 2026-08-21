@@ -19,10 +19,10 @@ export default function StartSeite() {
       </div>
 
       {/* Randbündig zum Inhaltsbereich, ohne Rundung. */}
-      <div className="grid grid-cols-[3fr_2fr] gap-1 min-h-[300px]">
+      <div className="grid grid-cols-[3fr_2fr] gap-1">
         <Link
           href="/antworten"
-          className="bg-papier px-6 py-6 text-2xl font-semibold text-text hover:bg-grund-tief transition-colors flex items-center"
+          className="bg-papier px-6 py-8 text-2xl font-semibold text-text hover:bg-grund-tief transition-colors flex items-center"
         >
           Auf eine Mail
           <br />
@@ -31,7 +31,7 @@ export default function StartSeite() {
 
         <Link
           href="/antworten?art=neu"
-          className="bg-grund-tief px-6 py-6 text-xl font-semibold text-text hover:bg-papier transition-colors flex items-center"
+          className="bg-grund-tief px-6 py-8 text-xl font-semibold text-text hover:bg-papier transition-colors flex items-center"
         >
           Neue Mail
           <br />

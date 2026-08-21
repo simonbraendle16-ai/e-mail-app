@@ -26,7 +26,7 @@ export function Aufklappbar({
       >
         {zeile}
       </button>
-      {offen ? <div className="mt-3 animate-auftauchen">{children}</div> : null}
+      {offen ? <div className="mt-3">{children}</div> : null}
     </div>
   );
 }

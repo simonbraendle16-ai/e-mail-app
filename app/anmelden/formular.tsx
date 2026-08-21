@@ -24,7 +24,7 @@ export function Anmeldeformular() {
 
   if (ergebnis.stand === "geschickt") {
     return (
-      <div className="animate-auftauchen">
+      <div>
         <p className="text-m mb-3">
           Der Link ist unterwegs an <strong>{ergebnis.adresse}</strong>.
         </p>
