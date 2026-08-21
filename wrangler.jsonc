@@ -1,0 +1,31 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "e-mail-app",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-08-21",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "services": [
+    {
+      "binding": "WORKER_SELF_REFERENCE",
+      "service": "e-mail-app"
+    }
+  ],
+
+  // Region: Cloudflare Workers laufen im Netz verteilt, es gibt keine feste
+  // Region. Das ist unkritisch, weil die App selbst nichts speichert — alle
+  // Daten liegen in Supabase Frankfurt (CLAUDE.md §3).
+
+  // Die Umgebungsvariablen werden NICHT hier eingetragen, sondern als Secrets:
+  //   npx wrangler secret put SUPABASE_SECRET_KEY
+  //   npx wrangler secret put MISTRAL_API_KEY
+  // Ein Secret erscheint nirgends im Klartext, weder im Repo noch in der
+  // Cloudflare-Oberflaeche. Die oeffentlichen NEXT_PUBLIC_-Werte werden beim
+  // Bauen eingebacken und stehen in .env.local bzw. in den Build-Variablen.
+  "observability": {
+    "enabled": true
+  }
+}

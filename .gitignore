@@ -1,6 +1,7 @@
 node_modules/
 .env
 .env.local
+.dev.vars
 .next/
 dist/
 .DS_Store
@@ -9,4 +10,5 @@ next-env.d.ts
 .open-next/
 .wrangler/
 .vercel/
+cloudflare-env.d.ts
 tsconfig.tsbuildinfo

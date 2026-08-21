@@ -1,14 +1,11 @@
-import { dirname } from "path";
-import { fileURLToPath } from "url";
-import { FlatCompat } from "@eslint/eslintrc";
+import coreWebVitals from "eslint-config-next/core-web-vitals";
+import typescriptConfig from "eslint-config-next/typescript";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-const compat = new FlatCompat({ baseDirectory: __dirname });
-
+/* Ab Next.js 16 liefert eslint-config-next fertige Flat-Config-Bausteine.
+   Der frühere Umweg über FlatCompat entfällt. */
 const eslintConfig = [
-  ...compat.extends("next/core-web-vitals", "next/typescript"),
+  ...coreWebVitals,
+  ...typescriptConfig,
   {
     // next-env.d.ts wird von Next.js erzeugt und nicht von uns gepflegt.
     ignores: [".next/**", "node_modules/**", ".open-next/**", "next-env.d.ts"],
