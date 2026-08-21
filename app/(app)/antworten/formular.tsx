@@ -13,6 +13,11 @@ import {
   type KundeKurz,
 } from "@/components/kundenwahl";
 import {
+  Befundstreifen,
+  ungedeckteStellen,
+} from "@/components/befundstreifen";
+import type { Befund } from "@/lib/pruefungen/typen";
+import {
   entwurfLesen,
   entwurfSichern,
   entwurfVergessen,
@@ -34,7 +39,8 @@ type Lage =
       mailId: string;
       knapp: string;
       ausfuehrlich: string;
-      warnungen: string[];
+      /** Was die maschinellen Prüfungen gefunden haben (`MODELL.md` §4). */
+      befunde: Befund[];
     }
   | { art: "fehler"; text: string };
 
@@ -227,13 +233,20 @@ export function Antwortformular({
                 gesammelt += nachricht.text;
                 setLage({ art: "laeuft", schritt, text: gesammelt });
                 break;
+              case "neuversuch":
+                /* Der erste Entwurf wird verworfen. Ohne dieses Leeren
+                   hinge der zweite Text unten am ersten, und sie läse eine
+                   Mail, die es so nie gab. */
+                gesammelt = "";
+                setLage({ art: "laeuft", schritt, text: "" });
+                break;
               case "fertig":
                 setLage({
                   art: "fertig",
                   mailId: nachricht.mailId,
                   knapp: nachricht.knapp,
                   ausfuehrlich: nachricht.ausfuehrlich,
-                  warnungen: nachricht.warnungen ?? [],
+                  befunde: nachricht.befunde ?? [],
                 });
                 /* Erst wenn die Mail steht, ist der Entwurf entbehrlich. */
                 entwurfVergessen();
@@ -373,11 +386,9 @@ function Ergebnis({ lage }: { lage: Extract<Lage, { art: "fertig" }> }) {
     const text = fassungen.find((f) => f.marke === gewaehlt)?.text ?? lage.knapp;
     return (
       <div className="flex flex-col gap-5">
-        {lage.warnungen.map((w) => (
-          <Hinweisstreifen key={w}>{w}</Hinweisstreifen>
-        ))}
+        <Befundstreifen befunde={lage.befunde} />
         <Papier>
-          <Mailtext text={text} />
+          <Mailtext text={text} ungedeckt={ungedeckteStellen(lage.befunde)} />
         </Papier>
         <div className="flex items-center gap-5">
           <Knopf onClick={() => kopieren(text)}>
@@ -397,9 +408,7 @@ function Ergebnis({ lage }: { lage: Extract<Lage, { art: "fertig" }> }) {
 
   return (
     <div className="flex flex-col gap-5">
-      {lage.warnungen.map((w) => (
-        <Hinweisstreifen key={w}>{w}</Hinweisstreifen>
-      ))}
+      <Befundstreifen befunde={lage.befunde} />
 
       <p className="text-m text-text-leise">
         {fassungen.length > 1
@@ -420,7 +429,10 @@ function Ergebnis({ lage }: { lage: Extract<Lage, { art: "fertig" }> }) {
               </h2>
             ) : null}
             <Papier className="flex-1">
-              <Mailtext text={fassung.text} />
+              <Mailtext
+                text={fassung.text}
+                ungedeckt={ungedeckteStellen(lage.befunde)}
+              />
             </Papier>
             <div>
               <Knopf art="neben" onClick={() => setGewaehlt(fassung.marke)}>

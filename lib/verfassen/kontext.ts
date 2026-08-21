@@ -1,7 +1,7 @@
 import "server-only";
 import { serverZugang } from "@/lib/supabase/server";
 import { kundeLaden } from "@/lib/db/kunden";
-import type { KundeLesbar } from "@/lib/db/typen";
+import type { KundeLesbar, RegelArt } from "@/lib/db/typen";
 import type { Skill } from "@/lib/skills/typen";
 
 /**
@@ -33,6 +33,18 @@ const GRENZEN = {
 export type Kontextregel = {
   text: string;
   kundenspezifisch: boolean;
+  /** `vermeiden`, `bevorzugen`, `ton`, `aufbau` (`lib/db/typen.ts`). */
+  art: RegelArt;
+  /**
+   * Suchmuster für die maschinelle Prüfung (`MODELL.md` §4).
+   *
+   * Nur `vermeiden`-Regeln haben eins, und auch die nicht immer: „klinge
+   * nicht so steif" lässt sich nicht als Muster fassen, „nie 'mit
+   * freundlichen Grüßen'" schon. Ohne Muster bleibt die Regel eine reine
+   * Anweisung an das Modell — mit Muster kommt die Prüfung dazu, die auch
+   * dann noch greift, wenn das Modell die Anweisung überliest.
+   */
+  muster: string | null;
 };
 
 export type Kontext = {
@@ -140,7 +152,7 @@ async function regelnLaden(
     const zugang = await serverZugang();
     let abfrage = zugang
       .from("style_rules")
-      .select("regel, kunde_id")
+      .select("regel, kunde_id, art, muster")
       .eq("status", "aktiv");
 
     /* Globale Regeln immer, kundenspezifische nur für diesen Kunden. */
@@ -153,6 +165,8 @@ async function regelnLaden(
     return (data ?? []).map((z) => ({
       text: z.regel,
       kundenspezifisch: z.kunde_id !== null,
+      art: (z.art ?? "vermeiden") as RegelArt,
+      muster: z.muster ?? null,
     }));
   } catch {
     return [];

@@ -3,9 +3,14 @@
 > Stand: 2026-08-21 · Status: **Im Bau. Phase 0 und 1 stehen, Phase 2 abgeschlossen.**
 > Durchlaufen: Anforderungs-Drill ✓ · Spezifikation ✓ · Kreuzverhör ✓ · Freigabe durch den User ✓
 > Gebaut: Fundament ✓ · Design-Prototyp ✓ · Datenmodell ✓ · Modellanbindung ✓ · Skill-Maschinerie ✓
-> · Verfassen Deutsch ✓ — als Nächstes Phase 6 (maschinelle Prüfungen).
+> · Verfassen Deutsch ✓ · Maschinelle Prüfungen ✓ — als Nächstes Phase 7
+> (Übersetzung & Rückübersetzung).
 >
-> **Empfohlen vor Phase 6:** zehn Minuten Draufschauen durch die Mutter (PLAN.md §6, §9).
+> **Offen aus Phase 6:** Die Glossarprüfung aus `MODELL.md` §4 ist noch nicht gebaut.
+> Sie vergleicht Begriffe zwischen zwei Sprachen und hat im deutschen Verfassen nichts
+> zu prüfen — sie entsteht mit Phase 7. Die anderen fünf Prüfungen laufen.
+>
+> **Empfohlen vor Phase 7:** zehn Minuten Draufschauen durch die Mutter (PLAN.md §6, §9).
 > Repo: https://github.com/simonbraendle16-ai/e-mail-app (privat)
 > Dieses Dokument ist die verbindliche Projekt-Referenz. Was hier steht, ist entschieden.
 

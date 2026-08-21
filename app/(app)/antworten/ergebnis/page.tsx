@@ -5,6 +5,11 @@ import { fachSkills } from "@/lib/skills/register";
 import { Knopf, KnopfLink } from "@/components/bausteine/knopf";
 import { Papier, Mailtext } from "@/components/bausteine/papier";
 import { Hinweisstreifen } from "@/components/bausteine/hinweisstreifen";
+import {
+  Befundstreifen,
+  ungedeckteStellen,
+} from "@/components/befundstreifen";
+import { pruefen } from "@/lib/pruefungen/pruefen";
 import { Aufklappbar } from "./aufklappbar";
 import { Werkzeugleiste } from "./werkzeugleiste";
 import {
@@ -70,6 +75,25 @@ export default async function ErgebnisSeite({
       ? fassungAusfuehrlich
       : fassungKnapp;
 
+  /* Der Zustand „zahl-ohne-beleg": In ihren Stichworten stand „Freitag", das
+     Modell hat daraus ein Kalenderdatum gemacht. Genau der Fall, für den die
+     Zahlenprüfung da ist — der Prototyp setzt ihn deshalb nicht nach, sondern
+     lässt die echte Prüfung darüberlaufen. */
+  const alsDatum = (text: string) =>
+    zahlOhneBeleg ? text.replace("[Datum eintragen]", "13.03.2026") : text;
+
+  const beispielQuellen = ["Lieferung geht Freitag raus"];
+
+  const beispielBefunde = zahlOhneBeleg
+    ? pruefen({
+        entwurf: alsDatum(gewaehlteFassung),
+        quellen: beispielQuellen,
+        regeln: [],
+      })
+    : [];
+
+  const beispielStellen = ungedeckteStellen(beispielBefunde);
+
   return (
     <>
       <main className="max-w-seite px-5 py-6">
@@ -85,12 +109,13 @@ export default async function ErgebnisSeite({
           />
         </div>
 
+        {/* Seit Phase 6 zeigt der Prototyp hier nicht mehr einen
+            nachgebauten Satz, sondern die echten Befunde aus
+            `lib/pruefungen` — sonst gäbe es zwei Wahrheitsstände, und der
+            Prototyp würde etwas versprechen, was die App anders macht. */}
         {zahlOhneBeleg ? (
           <div className="mb-5 max-w-inhalt">
-            <Hinweisstreifen>
-              Das Datum im Text stand nirgends in deinen Angaben. Schau bitte
-              drüber, bevor du die Mail abschickst.
-            </Hinweisstreifen>
+            <Befundstreifen befunde={beispielBefunde} />
           </div>
         ) : null}
 
@@ -98,7 +123,10 @@ export default async function ErgebnisSeite({
           /* --- Zustand 2: eine Fassung, die Arbeitsfläche ------------- */
           <div className="max-w-inhalt flex flex-col gap-5">
             <Papier>
-              <Mailtext text={gewaehlteFassung} />
+              <Mailtext
+                text={alsDatum(gewaehlteFassung)}
+                ungedeckt={beispielStellen}
+              />
             </Papier>
 
             <Werkzeugleiste kundenname={kunde.name} />
@@ -154,7 +182,10 @@ export default async function ErgebnisSeite({
                     {fassung.titel}
                   </h2>
                   <Papier className="flex-1">
-                    <Mailtext text={fassung.text} />
+                    <Mailtext
+                      text={alsDatum(fassung.text)}
+                      ungedeckt={beispielStellen}
+                    />
                   </Papier>
                   <div>
                     <KnopfLink

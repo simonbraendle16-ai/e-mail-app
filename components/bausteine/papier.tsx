@@ -47,20 +47,63 @@ export function Luecke({ children }: { children: ReactNode }) {
 }
 
 /**
- * Setzt einen Mailtext und hebt dabei alles in eckigen Klammern hervor.
- * Reine Darstellung — die Lücken entstehen beim Formulieren (Phase 6).
+ * Ungedeckte Angabe — die Markierung der Zahlenprüfung (`MODELL.md` §4).
+ *
+ * Bewusst anders als die Lücke: Eine Lücke ist eine Aufgabe, eine ungedeckte
+ * Zahl ist ein Verdacht. Deshalb keine Fläche, sondern eine Unterstreichung
+ * in `--fehler` — sie zieht den Blick auf das Wort selbst, statt es zu
+ * überdecken, und sie ist die einzige Stelle in der fertigen Mail, an der
+ * überhaupt Rot vorkommt (`DESIGN.md` §1).
  */
-export function Mailtext({ text }: { text: string }) {
-  const teile = text.split(/(\[[^\]]+\])/g);
+export function Ungedeckt({ children }: { children: ReactNode }) {
+  return (
+    <span
+      className="text-fehler underline decoration-2 underline-offset-4"
+      title="Diese Angabe stand in keiner Quelle."
+    >
+      {children}
+    </span>
+  );
+}
+
+/** Für den regulären Ausdruck entschärfen. */
+function entschaerft(text: string): string {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/**
+ * Setzt einen Mailtext, hebt alles in eckigen Klammern als Lücke hervor und
+ * markiert zusätzlich die Stellen, die die Prüfung beanstandet hat.
+ */
+export function Mailtext({
+  text,
+  ungedeckt = [],
+}: {
+  text: string;
+  /**
+   * Wörtliche Stellen aus den Befunden (`lib/pruefungen/typen.ts`) — Zahlen
+   * und Daten, die in keiner Quelle standen.
+   */
+  ungedeckt?: string[];
+}) {
+  /* Lange Stellen zuerst, damit „13.03.2026" nicht von „13" zerlegt wird. */
+  const stellen = [...new Set(ungedeckt)]
+    .filter(Boolean)
+    .sort((a, b) => b.length - a.length);
+
+  const muster = stellen.length
+    ? new RegExp(`(\\[[^\\]]+\\]|${stellen.map(entschaerft).join("|")})`, "g")
+    : /(\[[^\]]+\])/g;
+
   return (
     <>
-      {teile.map((teil, i) =>
-        teil.startsWith("[") && teil.endsWith("]") ? (
-          <Luecke key={i}>{teil}</Luecke>
-        ) : (
-          teil
-        ),
-      )}
+      {text.split(muster).map((teil, i) => {
+        if (!teil) return null;
+        if (teil.startsWith("[") && teil.endsWith("]"))
+          return <Luecke key={i}>{teil}</Luecke>;
+        if (stellen.includes(teil)) return <Ungedeckt key={i}>{teil}</Ungedeckt>;
+        return teil;
+      })}
     </>
   );
 }

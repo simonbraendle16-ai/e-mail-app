@@ -1,5 +1,7 @@
 import "server-only";
-import { formulieren, uebrigePlatzhalter } from "@/lib/modell";
+import { formulieren } from "@/lib/modell";
+import { neuversuchHinweis, pruefen } from "@/lib/pruefungen/pruefen";
+import type { Befund } from "@/lib/pruefungen/typen";
 import { skillWaehlen } from "@/lib/skills/auswahl";
 import { serverZugang } from "@/lib/supabase/server";
 import {
@@ -11,10 +13,9 @@ import { kontextSammeln } from "./kontext";
 import { kundeErkennen } from "./kundenerkennung";
 
 /**
- * Der Verarbeitungsweg einer Mail (`PLAN.md` §3), Schritte 1 bis 3.
+ * Der Verarbeitungsweg einer Mail (`PLAN.md` §3), Schritte 1 bis 4.
  *
- * Schritt 4 (maschinelle Prüfungen) folgt in Phase 6, Schritte 5 bis 7
- * (Übersetzung) in Phase 7.
+ * Die Schritte 5 bis 7 (Übersetzung) folgen in Phase 7.
  */
 
 /** Was die Oberfläche während des Formulierens angezeigt bekommt. */
@@ -23,12 +24,22 @@ export type Fortschritt =
   | { art: "kunde"; name: string | null; sprache: "de" | "en" }
   | { art: "skill"; name: string; bezeichnung: string }
   | { art: "text"; text: string }
+  /**
+   * Der bisher gezeigte Entwurf wird verworfen und neu geschrieben
+   * (`MODELL.md` §4). Die Oberfläche muss den Text leeren — sonst hängt der
+   * zweite Entwurf am ersten.
+   */
+  | { art: "neuversuch" }
   | {
       art: "fertig";
       mailId: string;
       knapp: string;
       ausfuehrlich: string;
-      warnungen: string[];
+      /**
+       * Was die maschinellen Prüfungen gefunden haben (`MODELL.md` §4).
+       * Leer ist der Normalfall.
+       */
+      befunde: Befund[];
     }
   | { art: "fehler"; text: string };
 
@@ -124,9 +135,7 @@ export async function* verfassen(
       archivEinbeziehen: angaben.archivEinbeziehen,
     });
 
-    /* --- 4. Formulieren ----------------------------------------------- */
-    yield { art: "schritt", text: "Ich formuliere." };
-
+    /* --- 4. Formulieren und prüfen ------------------------------------ */
     const nachrichten = anweisungBauen({
       skill: wahl.fachSkill,
       kontext,
@@ -144,43 +153,88 @@ export async function* verfassen(
       ichSelbst: await eigenerName(),
     };
 
+    /* Woraus eine Zahl oder ein Datum im Entwurf stammen darf (`MODELL.md`
+       §4). Frühere Mails stehen bewusst nicht darin — Begründung in
+       `lib/pruefungen/pruefen.ts`. */
+    const quellen = [
+      stichworte,
+      eingehenderText ?? "",
+      ...kontext.fakten,
+      ...kontext.bausteine,
+    ].filter((q) => q.trim());
+
     let gesamt = "";
+    let befunde: Befund[] = [];
 
-    for await (const stueck of formulieren({
-      zweck: "formulieren",
-      nutzerId,
-      nachrichten,
-      namen,
-      hoechstlaenge: 1600,
-      abbruch: angaben.abbruch,
-      /* Die Blöcke 1 bis 3 stehen vorn und ändern sich zwischen Aufrufen
-         kaum — ab dem zweiten Aufruf mit demselben Skill kosten sie nur noch
-         ein Zehntel (`MODELL.md` §7). Ohne diesen Schlüssel cacht Mistral
-         nicht, und die Ersparnis fiele einfach aus. */
-      zwischenspeicherSchluessel: zwischenspeicherSchluessel(
-        wahl.fachSkill,
-        nutzerId,
-      ),
-    })) {
-      if (stueck.art === "text") {
-        gesamt += stueck.text;
-        yield { art: "text", text: stueck.text };
+    /* Höchstens zwei Durchläufe: der erste, und **genau ein** Neuversuch,
+       wenn eine Regel verletzt oder die Mail unvollständig ist. Ein dritter
+       kostet noch einmal Geld und Wartezeit — und wenn das Modell zweimal
+       dieselbe Anweisung überliest, hilft ein drittes Mal auch nicht.
+       Was dann noch offen ist, sieht sie als Warnung. */
+    for (let versuch = 0; versuch < 2; versuch++) {
+      const hinweis = versuch === 0 ? null : neuversuchHinweis(befunde);
+
+      if (versuch === 0) {
+        yield { art: "schritt", text: "Ich formuliere." };
+      } else {
+        /* Sie hat den ersten Entwurf schon einlaufen sehen. Er wird jetzt
+           verworfen — das muss sichtbar sein, sonst hängt plötzlich ein
+           zweiter Text am ersten. */
+        yield { art: "neuversuch" };
+        yield {
+          art: "schritt",
+          text: "Da war noch etwas drin, das du nicht wolltest. Ich schreibe es neu.",
+        };
       }
+
+      /* Erst sichern, dann leeren — der verworfene Entwurf wird unten als
+         Modellantwort mitgeschickt, damit das Modell weiß, was es besser
+         machen soll. */
+      const vorigerEntwurf = gesamt;
+      gesamt = "";
+
+      for await (const stueck of formulieren({
+        zweck: "formulieren",
+        nutzerId,
+        /* Beim Neuversuch wird der verworfene Entwurf als Modellantwort
+           mitgegeben und der Hinweis als Antwort darauf. Zwei
+           Nutzer-Nachrichten hintereinander wären zwar kürzer, aber nicht
+           jeder Anbieter nimmt die an — und ein abgelehnter Aufruf wäre hier
+           besonders ärgerlich, weil die Mail schon einmal geschrieben war. */
+        nachrichten: hinweis
+          ? [
+              ...nachrichten,
+              { rolle: "modell" as const, inhalt: vorigerEntwurf },
+              { rolle: "nutzer" as const, inhalt: hinweis },
+            ]
+          : nachrichten,
+        namen,
+        hoechstlaenge: 1600,
+        abbruch: angaben.abbruch,
+        /* Die Blöcke 1 bis 3 stehen vorn und ändern sich zwischen Aufrufen
+           kaum — ab dem zweiten Aufruf mit demselben Skill kosten sie nur noch
+           ein Zehntel (`MODELL.md` §7). Ohne diesen Schlüssel cacht Mistral
+           nicht, und die Ersparnis fiele einfach aus. */
+        zwischenspeicherSchluessel: zwischenspeicherSchluessel(
+          wahl.fachSkill,
+          nutzerId,
+        ),
+      })) {
+        if (stueck.art === "text") {
+          gesamt += stueck.text;
+          yield { art: "text", text: stueck.text };
+        }
+      }
+
+      befunde = pruefen({ entwurf: gesamt, quellen, regeln: kontext.regeln });
+
+      /* Nichts, was ein Neuversuch beheben könnte — erfundene Angaben werden
+         ausdrücklich **nicht** still neu geschrieben, sie werden ihr gezeigt. */
+      if (!neuversuchHinweis(befunde)) break;
     }
 
-    /* --- 5. Aufteilen, prüfen, sichern -------------------------------- */
+    /* --- 5. Aufteilen und sichern ------------------------------------- */
     const { knapp, ausfuehrlich } = fassungenTrennen(gesamt);
-
-    const warnungen: string[] = [];
-
-    /* Ein Platzhalter, der die Rückersetzung überlebt hat, stünde sonst in
-       der Mail an den Kunden — der peinlichste mögliche Fehler dieser App. */
-    const uebrig = uebrigePlatzhalter(gesamt);
-    if (uebrig.length > 0) {
-      warnungen.push(
-        "In der Mail steht noch ein Platzhalter. Schau bitte drüber, bevor du sie abschickst.",
-      );
-    }
 
     const mailId = await mailSichern({
       nutzerId,
@@ -191,7 +245,7 @@ export async function* verfassen(
       skill: wahl.fachSkill.name,
     });
 
-    yield { art: "fertig", mailId, knapp, ausfuehrlich, warnungen };
+    yield { art: "fertig", mailId, knapp, ausfuehrlich, befunde };
   } catch (fehler) {
     const fuerSie =
       fehler instanceof Error && "fuerSie" in fehler
