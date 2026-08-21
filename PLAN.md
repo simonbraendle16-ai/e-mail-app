@@ -40,16 +40,17 @@
 | Diff | **`diff` (jsdiff)** auf Satzebene | Grundlage der Regelableitung aus manuellen Bearbeitungen. |
 | Tests | **Vitest** für Kernlogik, kein E2E-Framework | Getestet wird, was still kaputtgehen kann: Regel-Anwendung, Glossar-Erzwingung, RAG-Auswahl, Diff-Ableitung. UI wird im echten Browser sichtgeprüft. |
 
-### Zwei offene Entscheidungen (bitte mit der Freigabe mitentscheiden)
+### Entschieden
 
-1. **Deployment-Ziel.** Empfehlung **Vercel** — für Next.js der Pfad des geringsten Widerstands,
-   Funktionen auf `fra1` (Frankfurt) festnageln. Der Hobby-Tarif ist formal nicht für kommerzielle
-   Nutzung gedacht; bei einem privaten Werkzeug ist das eine Grauzone. Wer sie vermeiden will:
-   **Cloudflare Pages** (kostenlos, kommerziell erlaubt, dafür etwas Mehraufwand beim Next.js-Adapter).
-   Der Code bleibt in beiden Fällen anbieterneutral.
-2. **Mistral-Konto.** Dein bestehender Key, oder ein eigenes Konto auf ihren Namen. Empfehlung:
-   **eigenes Konto für sie**, mit Ausgabenlimit. Dann sind ihre Daten vertraglich ihre, du siehst
-   die Kosten getrennt, und wenn das Projekt mal an sie übergeht, muss nichts umgezogen werden.
+1. **Deployment: Cloudflare Pages.** Kostenlos ohne Grauzone bei beruflicher Nutzung.
+   Vercel verworfen, weil dessen Hobby-Tarif formal nicht für kommerzielle Nutzung gedacht ist.
+2. **Mistral-Konto: Start mit dem Key des Users**, eigenes Konto für sie, sobald sie eines hat.
+   Der Wechsel ist eine Umgebungsvariable, kein Umbau.
+3. **Schriften selbst ausgeliefert.** Kein Google-CDN — siehe `CLAUDE.md` §4.
+4. **Design vor Code.** `DESIGN.md` ist verbindlich; die fünf Bildschirme werden als klickbarer
+   Prototyp gebaut und freigegeben, bevor Funktionslogik entsteht. Figma verworfen: Schreibzugriff
+   hängt an einem bezahlten Sitz, und der Schritt Entwurf → Code ist genau die Stelle, an der
+   Gestaltung verwässert.
 
 ---
 
@@ -236,16 +237,20 @@ lauffähig, damit du jederzeit reinschauen kannst.
 
 | # | Phase | Inhalt | Ergebnis |
 |---|---|---|---|
-| 0 | **Fundament** | Next.js, TypeScript, Tailwind, shadcn, Verzeichnisstruktur, Umgebungsvariablen, Supabase-Projekt in Frankfurt, Magic-Link-Anmeldung, Deployment-Strecke | Leere App unter einer URL, Anmeldung funktioniert |
-| 1 | **Datenmodell** | Alle Tabellen als Migrationen, RLS-Richtlinien, pgvector, Indizes, Verschlüsselung, TypeScript-Typen generiert | Datenbank steht, RLS nachweislich dicht |
-| 2 | **LLM-Anbindung** | Provider-Interface, Mistral-Adapter, Pseudonymisierung rein/raus, Wiederholung mit Backoff, Kostenprotokoll, lokaler Adapter als Nachweis der Austauschbarkeit | Modellaufrufe laufen, Kosten sichtbar |
-| 3 | **Verfassen Deutsch** | Antwort-Bildschirm, Analyse eingehender Mails, Kundenerkennung, Kontextzusammenstellung, Entwurf, Versionierung | Erste echte Mail entsteht |
-| 4 | **Übersetzung** | Englische Fassung, Glossar-Erzwingung, Terminologie-Kontrolle, Sprachsteuerung über die Kundenakte | Fachlich korrektes Englisch |
-| 5 | **Korrekturschleife** | Beide Wege, Regelverwaltung, mechanische Regelprüfung, Regelableitung mit Bestätigung | Abgelehntes kommt nicht wieder |
-| 6 | **Kundengedächtnis** | Kundenakte, automatische Faktenextraktion, Kundenbildschirm | Mails werden mit der Zeit persönlicher |
-| 7 | **Wissensbasis** | Einbettung und Indexierung von Mails, Dokument-Upload, Mistral OCR, hybride Suche, Textbausteine, Glossarvorschläge | RAG greift, Wissen wächst von allein |
-| 8 | **Politur** | Fehlerbehandlung durchgängig, Zwischenspeicherung, Ladezustände, Barrierefreiheit, deutsche Texte überall, Kostendeckel-Warnung | Nichts fühlt sich mehr nach Baustelle an |
-| 9 | **Abnahme** | Sichtprüfung im echten Browser, realistische Testmails, Kosten-Hochrechnung, Kurzanleitung für sie, `validierung`-Skill | Übergabereif |
+| 0 | **Fundament** | Next.js, TypeScript, Tailwind mit den Tokens aus `DESIGN.md`, selbst ausgelieferte Schriften, Verzeichnisstruktur, Supabase-Projekt in Frankfurt, Magic-Link-Anmeldung, Cloudflare-Deployment | Leere App unter einer URL, Anmeldung funktioniert |
+| 1 | **Design-Prototyp** | Alle fünf Bildschirme aus `DESIGN.md` als klickbare Seiten mit Beispieldaten, alle Zustände (Laden, Fehler, leer). **Freigabe durch dich, bevor Logik entsteht.** | Du siehst die App, bevor sie etwas kann |
+| 2 | **Datenmodell** | Alle Tabellen als Migrationen, RLS-Richtlinien, pgvector, Indizes, Feldverschlüsselung, Löschfristen für Rohtexte, TypeScript-Typen | Datenbank steht, RLS nachweislich dicht |
+| 3 | **Modellanbindung** | Provider-Interface, Mistral-Adapter, Pseudonymisierung rein/raus, Wiederholung mit Backoff, Kostenprotokoll, lokaler Adapter als Nachweis der Austauschbarkeit | Modellaufrufe laufen, Kosten sichtbar |
+| 4 | **Skill-Maschinerie** | Skill-Dateien unter `skills/`, Einlesen, Signalwort-Abgleich, Einordnungsschritt, Anzeige und Umschaltung für sie | Die App weiß, was für eine Mail das ist |
+| 5 | **Verfassen Deutsch** | Antwort-Bildschirm, Analyse eingehender Mails, Kundenerkennung, Kontextzusammenstellung nach `SKILLS.md` §6, Entwurf, Versionierung | Erste echte Mail entsteht |
+| 6 | **Maschinelle Prüfungen** | Regelprüfung, **Zahlen- und Terminprüfung**, Vollständigkeit, Lückenmarkierung, gezielte Neuversuche | Keine erfundenen Preise, keine verbotenen Formulierungen |
+| 7 | **Übersetzung** | Englische Fassung, exakter Glossarabgleich, Terminologie-Nachkontrolle, Sprachsteuerung über die Kundenakte | Fachlich korrektes Englisch |
+| 8 | **Korrekturschleife** | Beide Wege, Regelverwaltung, Ableitung mit Bestätigung, Konflikterkennung, Daumen-Bewertung | Abgelehntes kommt nicht wieder |
+| 9 | **Kundengedächtnis** | Kundenakte, automatische Faktenextraktion, Kundenbildschirm | Mails werden mit der Zeit persönlicher |
+| 10 | **Wissensbasis** | Einbettung und Indexierung, Dokument-Upload, Mistral OCR, hybride Suche, Textbausteine, Glossarvorschläge | Wissen wächst von allein |
+| 11 | **Rückschrittsprüfung** | Gesammelte bewertete Fälle als Prüfsatz, automatischer Durchlauf bei jeder Änderung an Anweisungen oder Modell | Verbesserungen verschlechtern nichts still |
+| 12 | **Politur** | Fehlerbehandlung durchgängig, Zwischenspeicherung, Ladezustände, Barrierefreiheit, deutsche Texte überall, Kostenwarnung | Nichts fühlt sich mehr nach Baustelle an |
+| 13 | **Abnahme** | Sichtprüfung im echten Browser, realistische Testmails, Kosten-Hochrechnung, Kurzanleitung für sie, `validierung`-Skill gegen alle vier Dokumente | Übergabereif |
 
 **Am Ende jeder Phase:** Commit mit sauberer Nachricht, Push, kurze Zusammenfassung an dich.
 Vor der Übergabe läuft der `validierung`-Skill gegen `CLAUDE.md`, Anforderung für Anforderung.

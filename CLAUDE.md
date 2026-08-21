@@ -4,6 +4,15 @@
 > Repo: https://github.com/simonbraendle16-ai/e-mail-app (privat)
 > Dieses Dokument ist die verbindliche Projekt-Referenz. Was hier steht, ist entschieden.
 
+**Begleitdokumente — ebenfalls verbindlich:**
+
+| Datei | Inhalt |
+|---|---|
+| [`PLAN.md`](PLAN.md) | Architektur, Datenmodell, Verarbeitungsweg, Umsetzungsphasen |
+| [`SKILLS.md`](SKILLS.md) | Fach- und System-Skills, Auswahlverfahren, Kontextbudget |
+| [`MODELL.md`](MODELL.md) | Wortlaut der Modell-Anweisungen, maschinelle Prüfungen, Qualitätsmessung |
+| [`DESIGN.md`](DESIGN.md) | Farben, Schrift, Maße, Bausteine, alle fünf Bildschirme |
+
 ---
 
 ## 1. Ziel
@@ -39,7 +48,9 @@ Konkret: keine Pflegearbeit, keine Konfiguration, kein Lernaufwand, kein Tool da
 | Rechtsrahmen | **Privates Werkzeug** für sie | Kein Firmen-Rollout. Konsequenz: Kundendaten werden pseudonymisiert gespeichert, technisch fahren wir trotzdem die DSGVO-Maximalvariante. |
 | Datenhaltung | **Supabase, EU-Region Frankfurt** | pgvector für RAG, Auth, Backups, Updates ohne Zugriff auf ihren Rechner. Preis: US-Konzern → CLOUD-Act-Restrisiko, abgefedert durch Pseudonymisierung. Verworfen: lokales SQLite (kein Fernupdate), eigener Hetzner-Server (Admin-Aufwand). |
 | Auslieferung | **Gehostete Web-App**, sie öffnet eine URL und ist eingeloggt | Kein Start, kein Terminal, keine Installation. |
-| App-Hosting | **Cloudflare Pages bzw. Vercel, Funktionen in EU-Region** | Dauerhaft kostenlos *und* EU-Unternehmen gibt es praktisch nicht (siehe §7). Die App selbst speichert nichts — alle Daten liegen in Supabase Frankfurt. Code bleibt anbieterneutral. |
+| App-Hosting | **Cloudflare Pages** | Dauerhaft kostenlos ohne Grauzone bei beruflicher Nutzung. Verworfen: Vercel — dessen Hobby-Tarif ist formal nicht für kommerzielle Nutzung gedacht, und sie setzt die App im Job ein. Die App selbst speichert nichts, alle Daten liegen in Supabase Frankfurt. |
+| Modellzugang | **Start mit dem Mistral-Konto des Users, eigenes Konto für sie später** | Der Wechsel ist eine Umgebungsvariable. Getrennte Kosten und saubere Zuordnung, sobald sie ein eigenes Konto hat. |
+| Schriften | **Selbst ausgeliefert** (`next/font`), kein Google-CDN | Ein CDN-Aufruf überträgt ihre IP-Adresse an Google — vom LG München I 2022 abgemahnt (Az. 3 O 17493/20). Selbst ausgeliefert entsteht die Verbindung gar nicht erst. |
 | Nutzerkreis | **Nur sie** (+ Wartungskonto), aber **Row-Level-Security von Anfang an** | Kolleginnen später ohne Umbau möglich. Kostet jetzt fast nichts. |
 | LLM | **Mistral, EU-Endpunkt**, Provider hinter austauschbarem Interface | Siehe §4. Lokales Modell (Ollama, OpenAI-kompatibel) bleibt jederzeit anschließbar. |
 | Eingabe | **Tippen in v1**, Diktat später | Windows-Bordmittel `Win+H` deckt Diktat vorerst ab. Whisper-Anbindung ist ein eigener Brocken. |
@@ -58,11 +69,28 @@ Schutzmaßnahmen, Lösch- und Auskunftskonzept.
 - DPA ist Vertragsbestandteil, mit der DSGVO als Grundlage geschrieben — nicht als Anhang
 - Kein US-Konzern dahinter → **US CLOUD Act greift nicht**
 
+**Grundsatz des Users, wörtlich: „wir nehmen IMMER den sauberen".**
+Wo eine datenschutzrechtlich saubere und eine bequeme Variante zur Wahl stehen, gilt die saubere —
+auch wenn sie mehr Aufwand kostet. Grauzonen werden nicht stillschweigend eingegangen, sondern
+offengelegt und entschieden.
+
 **Zusätzliche Maßnahmen im Projekt:**
-- Kundennamen und Firmen werden pseudonymisiert gespeichert; sensible Felder verschlüsselt
+- **Datensparsamkeit als Hauptschutz:** Rohe Kundenmails werden nicht dauerhaft aufbewahrt, nur
+  das daraus Gelernte (Stilregeln, Fachbegriffe, verdichtete Fakten). Automatische Löschung der
+  Rohtexte nach einstellbarer Frist. Was nicht gespeichert ist, kann nicht abfließen.
+- Kundennamen, Firmen und Ansprechpartner verschlüsselt; Schlüssel außerhalb der Datenbank
+- Gegenüber Mistral durchgehend pseudonymisiert (`[KUNDE_1]`), Rückersetzung erst serverseitig
 - Row-Level-Security in Supabase, niemand außer ihr sieht ihre Daten
 - Löschfunktion pro Kunde und pro Mail, vollständiger Datenexport
+- Schriften selbst ausgeliefert, keine Verbindung zu fremden Servern aus ihrem Browser
 - Provider-Interface: Wechsel auf ein lokal laufendes Modell ist jederzeit ohne Umbau möglich
+
+**Bewusst getragenes Restrisiko:** Supabase ist ein US-Konzern. EU-Region, Auftragsverarbeitungs-
+vertrag und Verschlüsselung federn das ab; ein CLOUD-Act-Zugriff auf die Mailhistorie einer
+Käserei-Kundenbetreuung ist theoretisch. Das reale Thema ist ein anderes und vom Hoster unabhängig:
+Es sind Daten ihres Arbeitgebers auf einem privat betriebenen Dienst. Ein Wechsel zu einem
+deutschen Anbieter würde daran nichts ändern — deshalb liegt der Hebel bei der Datensparsamkeit,
+nicht beim Serverstandort. Entscheidung des Users nach ausdrücklicher Risikoabwägung.
 
 *Hinweis: keine Rechtsberatung. Bei einem späteren Firmen-Rollout kommen AVV, Verzeichnis der
 Verarbeitungstätigkeiten und Löschkonzept als formale Schritte dazu.*
@@ -116,6 +144,29 @@ Abgelehnte Formulierungen kommen nicht wieder — das ist die Kernzusage der App
 - Firmen-Standardformulierungen: Signaturen, Textbausteine, feste Absichtserklärungen
 - PDFs (Angebote, Preislisten, Lieferscheine) über Dokumenten-Parsing — Mistral OCR
 - Produkt-/Sortimentsdaten: vom User nachzuliefern, Struktur wird vorgesehen
+
+### 5.6 Skills
+
+Zwei Klassen, vollständig spezifiziert in **`SKILLS.md`**:
+
+- **Fach-Skills** — bestimmen Aufbau und Ton je Mailart: `anfrage-angebot`, `liefertermin`,
+  `auftrag-bestellung`, dazu `allgemein` als Rückfallebene. (`reklamation` ist vorgesehen,
+  aber vom User nicht ausgewählt.)
+- **System-Skills** — Fähigkeiten quer zu jeder Mail: `uebersetzer`, `wissensabruf`,
+  `selbstverbesserung`.
+
+Jeder Skill liegt als Datei unter `skills/<name>.md` mit Signalwörtern, Kontextbedarf und
+Modellstufe. Ausgewählt wird zweistufig: deterministischer Signalwort-Abgleich, dann ein günstiger
+Einordnungsschritt. **Sie sieht immer, welcher Skill greift, und kann mit einem Klick umschalten.**
+Neue Skills sind eine neue Datei, kein Codeeingriff.
+
+### 5.7 Qualitätssicherung
+
+Vollständig in **`MODELL.md`**. Kern: Ein Prüfsatz muss nicht vorab beschafft werden — er wächst
+aus ihrer alltäglichen Bewertung (Daumen hoch/runter unter jeder Mail). Dazu kommen maschinelle
+Prüfungen, die nichts kosten und immer laufen: verbotene Formulierungen, **erfundene Zahlen und
+Termine**, Glossartreue, Vollständigkeit. Die Zahlenprüfung ist die wichtigste — ein falscher Preis
+in einer Kundenmail ist der einzige Fehler hier, der echten Schaden anrichtet.
 
 ## 6. Ausdrücklich nicht dabei
 
