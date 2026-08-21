@@ -61,6 +61,18 @@ export function Antwortformular({
   const [skill, setSkill] = useState<SkillAnzeige | null>(null);
   const [wiederhergestellt, setWiederhergestellt] = useState(false);
 
+  /**
+   * Nimmt den Wortlaut verdichteter Mails für **diese eine** Anfrage dazu
+   * (`CLAUDE.md` §4).
+   *
+   * Bewusst kein gespeicherter Zustand: Der Haken wird nach jedem Schreiben
+   * zurückgesetzt. Bliebe er stehen, wäre die Ausnahme nach dem ersten Mal
+   * still der Normalfall — und der Wortlaut ginge dauerhaft wieder an
+   * Mistral, ohne dass sie es je entschieden hätte. Die Spezifikation sagt
+   * ausdrücklich „für eine einzelne Anfrage".
+   */
+  const [archivDazu, setArchivDazu] = useState(false);
+
   const eingehend = useRef<HTMLTextAreaElement>(null);
   const stichworte = useRef<HTMLTextAreaElement>(null);
   const abbruch = useRef<AbortController | null>(null);
@@ -173,8 +185,14 @@ export function Antwortformular({
           stichworte: stichwortText,
           kundeId: kunde?.id ?? null,
           skillName: skill?.name,
+          archivEinbeziehen: archivDazu,
         }),
       });
+
+      /* Sofort zurücknehmen — die Ausnahme gilt für diese eine Anfrage. Hier
+         und nicht am Ende: Bricht der Aufruf gleich ab, ist der Haken trotzdem
+         weg, und ein zweiter Anlauf greift nicht unbemerkt aufs Archiv zu. */
+      setArchivDazu(false);
 
       if (!antwort.ok || !antwort.body) {
         const fehler = await antwort.json().catch(() => null);
@@ -352,10 +370,46 @@ export function Antwortformular({
           kunde={kunde ?? (erkennung.stand === "erkannt" ? erkennung.kunde : null)}
         />
       ) : (
-        <div className="flex justify-end">
-          <Knopf onClick={schreiben} disabled={lage.art === "laeuft"}>
-            {lage.art === "laeuft" ? "Ich schreibe …" : "Antwort schreiben"}
-          </Knopf>
+        /* Schalter oben, Knopf darunter rechts. Nebeneinander gestellt bricht
+           der Erklärtext um und schiebt den Knopf nach links — und der
+           Hauptknopf steht auf jedem Bildschirm rechtsbündig. */
+        <div className="flex flex-col gap-4">
+          {/* Der Archivschalter (`CLAUDE.md` §4).
+
+              Mails ab 100 Tagen werden durch eine Verdichtung ersetzt; ihr
+              Wortlaut fällt aus der Suche und geht nicht mehr an Mistral.
+              Genau das ist der Sinn der Sache — aber manchmal braucht sie den
+              Wortlaut doch, etwa wenn ein Kunde nach Monaten auf eine alte
+              Zusage zurückkommt.
+
+              Deshalb steht er hier: **sichtbar, aber nicht prominent.** Klein
+              und leise, links vom Knopf. Die Ausnahme soll man finden, wenn
+              man sie sucht — nicht mitnehmen, weil sie im Weg steht.
+
+              Kein Wort von Archiv, RAG oder Modell. Was passiert, steht in
+              ihrer Sprache da. */}
+          <label className="flex items-start gap-2 text-s text-text-leise max-w-inhalt">
+            <input
+              type="checkbox"
+              checked={archivDazu}
+              onChange={(e) => setArchivDazu(e.target.checked)}
+              className="w-4 h-4 accent-gruen mt-[3px] shrink-0"
+            />
+            <span>
+              Auch in älteren Mails nachschauen
+              <span className="block text-xs">
+                Mails ab etwa drei Monaten sind nur noch zusammengefasst
+                gespeichert. Brauchst du den genauen Wortlaut von damals, nimm
+                sie hier dazu — nur für diese eine Antwort.
+              </span>
+            </span>
+          </label>
+
+          <div className="flex justify-end">
+            <Knopf onClick={schreiben} disabled={lage.art === "laeuft"}>
+              {lage.art === "laeuft" ? "Ich schreibe …" : "Antwort schreiben"}
+            </Knopf>
+          </div>
         </div>
       )}
     </div>

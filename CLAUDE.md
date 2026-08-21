@@ -5,18 +5,28 @@
 > Gebaut: Fundament ✓ · Design-Prototyp ✓ · Datenmodell ✓ · Modellanbindung ✓ · Skill-Maschinerie ✓
 > · Verfassen Deutsch ✓ · Maschinelle Prüfungen ✓ · Übersetzung & Rückübersetzung ✓
 > · Korrekturschleife ✓ · Kundengedächtnis ✓ · Wissensbasis ✓ · Rückschrittsprüfung ✓
-> · Politur ✓ · Abnahme ✓
+> · Politur ✓ · Abnahme ✓ · **Validierung ✓** (drei Befunde gefunden und behoben)
 >
-> **Was vor der Übergabe noch offen ist — nichts davon ist Code, alles braucht den User:**
+> **Die Validierung nach Phase 13** hat drei Abweichungen aufgedeckt, alle behoben:
+> 1. Die **100-Tage-Verdichtung wurde nie ausgeführt** — die Datenbankseite stand seit
+>    Phase 2, der Auslöser fehlte in *allen* Phasen. Jetzt: `lib/verdichtung/`,
+>    `/api/wartung/verdichten`, angestoßen vom Weckruf-Zeitplan.
+> 2. Der **Archivschalter fehlte in der Oberfläche** — der Parameter war bis in die
+>    Suche durchgereicht, aber niemand konnte ihn setzen. Jetzt im Antwortformular,
+>    und er setzt sich nach jeder Anfrage zurück.
+> 3. Eine **leere Modellantwort löste keinen Neuversuch aus** — sie wäre als fertige
+>    Mail durchgegangen. Jetzt `brauchbareAntwort()` vor der Prüfung.
+>
+> **Was vor der Übergabe offen bleibt — nichts davon ist Code, alles braucht den User:**
 > 1. **Realistische Testmails.** Ein Durchlauf mit echten Kundenmails braucht eine
 >    angemeldete Sitzung und den Mistral-Schlüssel. Bis dahin ist der ganze Weg nur
->    in Einzelteilen geprüft (144 Tests), nie am Stück mit echten Daten.
-> 2. **Der `validierung`-Skill** gegen alle vier Dokumente, Anforderung für Anforderung.
-> 3. **Migration `0009_unterlagen_ablage.sql` einspielen** (Storage-Eimer samt
+>    in Einzelteilen geprüft (156 Tests), nie am Stück mit echten Daten.
+> 2. **Migration `0009_unterlagen_ablage.sql` einspielen** (Storage-Eimer samt
 >    Zugriffsregeln) — geschrieben, aber noch nicht auf dem Supabase-Projekt.
-> 3b. **`WARTUNG_TOKEN` setzen** — in `.env` **und** als GitHub-Secret, zusammen
->    mit `APP_URL`. Ohne den Wert ist der Verdichtungs-Endpunkt zu und die
->    100-Tage-Regel läuft nie (siehe `.env.local.beispiel`).
+> 3. **`WARTUNG_TOKEN` und `APP_URL` setzen** — in `.env` **und** als GitHub-Secrets.
+>    Ohne die Werte ist der Verdichtungs-Endpunkt zu und die 100-Tage-Regel läuft
+>    nie (siehe `.env.local.beispiel`). **Das ist der wichtigste der offenen Punkte:**
+>    ohne ihn bleibt der Wortlaut dauerhaft im RAG.
 > 4. **Mistral OCR am echten Endpunkt erproben.** Der Aufruf in `lib/wissen/ocr.ts`
 >    folgt der dokumentierten Form, ist aber nie gegen den echten Dienst gelaufen;
 >    geprüft ist nur, dass ein Fehlschlag sauber ankommt und den Upload nicht mitreißt.
