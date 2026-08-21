@@ -15,6 +15,7 @@ etwas Brauchbares herauskommt**. Ohne beides ist „schreibt gute Mails" eine Be
 | Kunde erkennen | Small 3.1 | Namensabgleich mit Bestand |
 | Deutsche Mail formulieren | **Large 3** | Das ist das Produkt |
 | Ins Englische übertragen | **Large 3** | Fachsprache, Register, Sinnübertragung |
+| Zurück ins Deutsche (Kontrolle) | Small 3.1 | Wörtliche Rückübertragung, keine Sprachkunst |
 | Terminologie nachkontrollieren | Small 3.1 | Abgleich gegen eine Liste |
 | Regel aus Bearbeitung ableiten | Small 3.1 | Kurzer Text, klare Frage |
 | Fakten über Kunden extrahieren | Small 3.1 | Läuft im Hintergrund, Menge zählt mehr als Finesse |
@@ -111,6 +112,31 @@ Nummeriert, kurz, im Imperativ. Kundenspezifische Regeln zuletzt, damit sie glob
 
 ---
 
+## 2b. Zwei Fassungen und laufender Text
+
+Ihr Engpass ist Grübelzeit. Deshalb zwei Abweichungen vom naheliegenden Vorgehen:
+
+**Der Text läuft ein.** Die Antwort wird gestreamt und erscheint Wort für Wort. Sie liest bereits,
+während formuliert wird — die gefühlte Wartezeit fällt fast weg. Ohne das steht sie 25 Sekunden vor
+einem leeren Feld, und genau das Warten füttert die Grübelschleife.
+
+**Es kommen zwei Fassungen**, in einem Aufruf erzeugt:
+
+```
+Schreibe zwei Fassungen dieser Mail.
+
+Fassung A: knapp. Nur das Nötige, höchstens fünf Sätze.
+Fassung B: ausführlicher. Mit Begründung und einem Satz zum weiteren Vorgehen.
+
+Beide Fassungen halten sich an alle oben genannten Vorgaben.
+Trenne sie durch eine Zeile mit ---
+Keine Überschriften, keine Erklärungen.
+```
+
+Auswählen ist leichter als bewerten. Ein einzelner Vorschlag wird zerdacht, zwei nebeneinander
+erzwingen eine Entscheidung — und die getroffene Wahl ist zugleich ein Lernsignal: Wählt sie
+dauerhaft die knappe Fassung, wird das zur Stilregel.
+
 ## 3. Die Übersetzungsanweisung
 
 ```
@@ -135,6 +161,23 @@ Die Begriffsliste entsteht durch **exakten Zeichenkettenabgleich** des deutschen
 Glossar, nicht durch Ähnlichkeitssuche. Terminologie darf nicht geraten werden.
 
 ---
+
+## 3b. Die Rückübersetzung (Kontrollanweisung)
+
+```
+Übertrage die folgende englische Mail zurück ins Deutsche.
+
+- Übersetze wörtlich, nah am englischen Text. Nicht schön machen, nicht glätten.
+- Gib Zusagen genau so wieder, wie sie dort stehen: "können" ist nicht "könnten".
+- Übernimm Zahlen, Daten und Mengen unverändert.
+- Keine Anmerkungen. Nur der deutsche Text.
+```
+
+Das deutsche Original wird **nicht** mitgeschickt. Kennt das Modell den Ausgangstext, gleicht es
+unbewusst an und die Kontrolle wird wertlos — sie würde bestätigen, was sie prüfen soll.
+
+Ein Vergleichsschritt prüft anschließend maschinell auf Abweichungen bei Zusagen (können/könnten,
+werden/würden), Verneinungen und Zahlen. Nur dort wird hervorgehoben.
 
 ## 4. Maschinelle Prüfungen (kein Modell, keine Kosten)
 

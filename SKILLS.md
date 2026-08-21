@@ -153,6 +153,13 @@ Er wäre der einzige Skill mit Deeskalation als Hauptaufgabe und verdient dann e
 **Nachkontrolle (Small 3.1):** Prüft jeden Glossarbegriff einzeln. Bei Abweichung genau eine
 gezielte Nachbesserung, danach ein sichtbarer Hinweis für sie.
 
+**Glossaraufbau — der einzige Weg, der ohne Vorarbeit funktioniert.** Es gibt weder einen
+Mailexport noch eine Terminologieliste der Firma. Das Glossar startet also leer und wächst durch
+Bestätigung: Nach der Übersetzung markiert die App die Fachbegriffe, die sie gewählt hat, und
+fragt einmal nach — *„Heißt das bei euch so?"*. Ein Klick macht den Begriff verbindlich, danach
+wird nie wieder gefragt. Höchstens drei Nachfragen pro Mail, sonst wird es zur Last.
+Was sie nicht bestätigt, bleibt Vorschlag und wird nicht erzwungen.
+
 **Grenze:** Übersetzt nie eine Mail, die noch nicht freigegeben ist. Erst Deutsch fertig, dann Englisch.
 
 ---
@@ -226,6 +233,28 @@ Bisher: ‚ausführlich begründen'. Was gilt?"
 
 ---
 
+### 8 · `rueckuebersetzung`
+**Klasse:** system · **Modell:** small · **Läuft:** immer nach einer englischen Fassung
+
+**Zweck:** Ihr Sicherheitsnetz. Sie braucht die App, *weil* sie das Fach-Englisch nicht sicher
+beurteilen kann — also kann sie das Ergebnis auch nicht prüfen. Die Terminologiekontrolle prüft
+Begriffe, nicht Sinn: „we can deliver" statt „we could deliver" besteht jede Glossarprüfung und
+ändert die Zusage.
+
+**Arbeitsweise:** Die fertige englische Mail wird **ohne Kenntnis des deutschen Originals**
+zurück ins Deutsche übertragen — wörtlich am englischen Text, nicht schön. Nur so zeigt sich,
+was dort tatsächlich steht.
+
+**Anzeige:** Eingeklappt unter der englischen Fassung, Zeile „Steht da, was du meinst?".
+Weicht die Rückübersetzung in einer Zusage, einer Zahl oder einer Verneinung vom deutschen
+Original ab, wird die Stelle hervorgehoben — das ist der einzige Fall, in dem die App ihr von
+sich aus etwas zeigt, das sie nicht angefragt hat.
+
+**Grenze:** Die Rückübersetzung ist Kontrollmittel, nie Ergebnis. Sie wird nie kopiert
+und nie verschickt.
+
+---
+
 ## Zusammenspiel bei einer Mail
 
 ```
@@ -236,14 +265,20 @@ Eingegangene Mail + Stichworte
    │
    ├─ wissensabruf         ──────────►  Kontext zusammengestellt (Small + Datenbank)
    │
-   ├─ Fach-Skill           ──────────►  deutsche Mail            (Large)
+   ├─ Fach-Skill           ──────────►  zwei deutsche Fassungen  (Large, laufender Text)
    ├─ harte Prüfungen      ──────────►  Regeln, Zahlen, Glossar  (kein Modell)
    ├─ uebersetzer          ──────────►  englische Fassung        (Large, nur bei Bedarf)
+   ├─ rueckuebersetzung    ──────────►  Kontrolle für sie        (Small, nur bei Englisch)
    │
    └─ selbstverbesserung   ──────────►  nach ihrer Korrektur     (Small, im Hintergrund)
 ```
 
-Von sieben Schritten brauchen nur zwei das teure Modell. Das ist der Grund, warum der Betrieb
+**Zwei Fassungen, laufender Text.** Ihr Engpass ist Grübelzeit, nicht Tipparbeit. Deshalb erscheint
+der Text **beim Entstehen**, statt nach 25 Sekunden fertig aufzuploppen — sie liest schon, während
+formuliert wird. Und es kommen **zwei Fassungen**: knapp und ausführlicher. Auswählen bricht eine
+Grübelschleife zuverlässiger als ein einzelner Vorschlag, den man dann doch wieder zerdenkt.
+
+Von acht Schritten brauchen nur zwei das teure Modell. Das ist der Grund, warum der Betrieb
 im niedrigen zweistelligen Bereich pro Monat bleibt, ohne dass die Formulierung leidet.
 
 ## Skills ergänzen

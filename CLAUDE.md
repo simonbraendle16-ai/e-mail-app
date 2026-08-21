@@ -21,12 +21,28 @@ Eine **DSGVO-konforme Web-App**, mit der die Mutter des Users (Büro / Kundenbet
 deutschen Käsereiunternehmen) ihre tägliche Kundenkorrespondenz bewältigt. Ihr Arbeitstag besteht
 zum größten Teil aus dem Verfassen von E-Mails und deren Übertragung ins Englische.
 
+### Das eigentliche Problem (im Kreuzverhör geschärft)
+
+**Sie verkopft sich beim deutschen Schreiben.** Nicht das Tippen kostet Zeit, sondern das Grübeln
+vor dem leeren Feld: wie formuliere ich das, ist das zu hart, ist das zu weich. Eine Mail kann so
+eine Viertelstunde verschlingen.
+
+Daraus folgen zwei Dinge, die den ganzen Bau prägen:
+
+- **Der deutsche Teil ist der Kern der App**, nicht das Beiwerk. Das Übersetzen hat sie mit einem
+  Übersetzungsdienst bereits halbwegs gelöst — es bleibt im Funktionsumfang, ist aber nicht der Engpass.
+- **Es zählt, wie schnell ein Vorschlag dasteht**, nicht wie perfekt er ist. Ein Startpunkt bricht
+  die Grübelschleife. Deshalb: Text läuft beim Entstehen ein statt fertig aufzuploppen, und es
+  erscheinen **zwei Fassungen** (knapp und ausführlicher) — auswählen ist für einen verkopften Kopf
+  leichter als bewerten.
+
 Zwei Kernschritte:
 
 1. **Verfassen** — aus der eingegangenen Kundenmail plus ein paar Stichworten eine fertig
    formulierte deutsche E-Mail im richtigen Ton und Wortlaut.
 2. **Übersetzen** — fachlich korrekte englische Fassung (Käserei-, Lebensmittel-, Export-,
-   Qualitätsterminologie), keine Wort-für-Wort-Übersetzung.
+   Qualitätsterminologie), keine Wort-für-Wort-Übersetzung. Dazu die **Rückübersetzung** als
+   Kontrolle (siehe §5.2).
 
 **Leitsatz des Users:** *"Interface soll stehen, soll Zeit ersparen und nicht kosten und kein
 zusätzlicher Klotz an ihrem Bein sein."* — Jede Designentscheidung wird daran gemessen.
@@ -75,11 +91,21 @@ auch wenn sie mehr Aufwand kostet. Grauzonen werden nicht stillschweigend eingeg
 offengelegt und entschieden.
 
 **Zusätzliche Maßnahmen im Projekt:**
-- **Datensparsamkeit als Hauptschutz:** Rohe Kundenmails werden nicht dauerhaft aufbewahrt, nur
-  das daraus Gelernte (Stilregeln, Fachbegriffe, verdichtete Fakten). Automatische Löschung der
-  Rohtexte nach einstellbarer Frist. Was nicht gespeichert ist, kann nicht abfließen.
-- Kundennamen, Firmen und Ansprechpartner verschlüsselt; Schlüssel außerhalb der Datenbank
-- Gegenüber Mistral durchgehend pseudonymisiert (`[KUNDE_1]`), Rückersetzung erst serverseitig
+- **Datensparsamkeit durch Verdichtung.** *Im Kreuzverhör aufgedeckter Widerspruch:* „Rohtexte
+  werden gelöscht" und „die App lernt aus früheren Mails" schließen einander aus — und die
+  RAG-Abschnitte *sind* der Rohtext, nur zerteilt. Sie mitzulöschen nimmt der App das Gedächtnis,
+  sie zu behalten macht die Löschung zur Kosmetik.
+  **Auflösung:** Nach Ablauf der Frist wird jede Mail durch eine Verdichtung ersetzt — Anliegen,
+  Tonfall, verwendete Formulierungen, gelernte Fakten; ohne Originalwortlaut, ohne Beträge, ohne
+  Namen. Das Gedächtnis bleibt, der Rohtext geht. Kostet einen zusätzlichen Verarbeitungsschritt.
+- Kundennamen, Firmen und Ansprechpartner verschlüsselt; Schlüssel außerhalb der Datenbank.
+  *Folge, die im Kreuzverhör auffiel:* Verschlüsselte Spalten sind nicht durchsuchbar — die
+  Kundensuche braucht einen zusätzlichen Suchindex über Hashwerte. Mehrarbeit, eingeplant.
+- Gegenüber Mistral durchgehend pseudonymisiert (`[KUNDE_1]`), Rückersetzung erst serverseitig.
+  *Ehrlich eingeordnet:* Das senkt das Risiko, beseitigt es nicht. „200 Laib Bergkäse für die
+  Filiale in Rotterdam" identifiziert den Kunden für jeden, der die Branche kennt; dazu kommen
+  Adressen, Bestell- und Telefonnummern im Fließtext. Namensersetzung ist eine Schutzschicht,
+  kein Schutzwall.
 - Row-Level-Security in Supabase, niemand außer ihr sieht ihre Daten
 - Löschfunktion pro Kunde und pro Mail, vollständiger Datenexport
 - Schriften selbst ausgeliefert, keine Verbindung zu fremden Servern aus ihrem Browser
@@ -112,8 +138,14 @@ Zweiter Einstieg für selbst initiierte Mails vorhanden, aber nicht der Standard
 - **Sprache hängt am Kunden**: deutsche Kunden bekommen Deutsch, ausländische Englisch.
   Die Kundenakte merkt sich die Sprache, sie muss nichts umschalten.
 - Fachterminologie verbindlich über das Glossar (§5.4).
-- **EN→DE (englische Mail verstehen) ist in v1 nicht dabei**, das Datenmodell trägt es aber —
-  Nachrüsten ohne Umbau möglich. Entscheidung des Users bleibt offen.
+- **Rückübersetzung ist in v1 dabei** — als Sicherheitsnetz, nicht als Komfort. Begründung aus dem
+  Kreuzverhör: Sie braucht die App, *weil* sie das Fach-Englisch nicht sicher beurteilen kann.
+  Damit kann sie das Ergebnis auch nicht prüfen, und die Terminologiekontrolle prüft nur Begriffe,
+  nicht Sinn. Eine falsch übertragene Zusage („we can" statt „we could") rutscht sonst durch.
+  Die englische Fassung wird deshalb ins Deutsche zurückübersetzt und danebengestellt: Steht dort,
+  was sie sagen wollte, stimmt es.
+- Englische Mails eingehend zu *verstehen* ist weiterhin nicht v1 — die Maschinerie dafür entsteht
+  mit der Rückübersetzung aber ohnehin.
 
 ### 5.3 Korrekturschleife — Kernfeature
 
@@ -134,7 +166,19 @@ Abgelehnte Formulierungen kommen nicht wieder — das ist die Kernzusage der App
 - **Kundenakte** pro Empfänger: Sprache, Ansprechpartner, Branche, Tonalität, Besonderheiten,
   Mailhistorie, kundenspezifische Regeln. Wächst automatisch mit jeder Mail.
 - **Fachglossar DE→EN**: Käse-, Lebensmittel-, Export-, Zoll-, Qualitätsbegriffe mit
-  verbindlicher Übersetzung. Wird aus ihren Mails extrahiert, vom User ergänzbar.
+  verbindlicher Übersetzung.
+
+  **Korrektur aus dem Kreuzverhör:** Ein Glossareintrag ist ein *Paar* (`Reifegrad → maturity level`).
+  Aus einer einsprachigen Mail lässt sich kein Paar gewinnen — „wächst automatisch mit" war hier
+  schlicht falsch. Es gibt weder einen Mailexport noch eine Terminologieliste der Firma; der User
+  kommt an keins von beidem heran und kann nur seine Mutter fragen.
+
+  **Deshalb der einzige gangbare Weg:** Aufbau durch Bestätigung im Arbeitsablauf. Beim Übersetzen
+  markiert die App die Fachbegriffe, die sie verwendet hat, und fragt einmal nach: „Heißt das bei
+  euch so?" Ein Klick, und der Begriff ist verbindlich. Danach wird nie wieder gefragt.
+  Das Glossar startet leer und füllt sich in den ersten Wochen — langsamer als erhofft, aber
+  ohne Vorarbeit, die niemand leisten kann. Der User kann jederzeit Begriffe nachliefern,
+  wenn er sie von ihr erfährt.
 - **Zielbild des Users:** *"über Zeit ist für jeden Kunden so viel Kontext da, dass das Modell
   weiß, was der Kunde möchte — und dann viel besser und personalisierter helfen kann."*
 
@@ -174,7 +218,13 @@ in einer Kundenmail ist der einzige Fehler hier, der echten Schaden anrichtet.
 - Kein Outlook-Add-in
 - Kein Mailversand aus der App heraus
 - Kein Diktat in v1
-- Kein EN→DE-Verstehensmodus in v1
+- Kein EN→DE-Verstehensmodus für *eingehende* Mails in v1 (die Rückübersetzung der eigenen Mails
+  ist dagegen v1, siehe §5.2)
+- **DeepL wird noch nicht eingesetzt.** Festgehalten als beste Alternative fürs Übersetzen: Kölner
+  Unternehmen, Referenzqualität im Paar Deutsch-Englisch, Glossarfunktion mit grammatischer
+  Anpassung statt stumpfem Ersetzen. Haken: Bei der kostenlosen API-Stufe dürfen die Texte zur
+  Verbesserung der Dienste verwendet werden — nach dem Grundsatz „immer der saubere Weg" käme nur
+  DeepL API Pro in Frage (rund 5 € Grundgebühr im Monat). Entscheidung vertagt, nicht verworfen.
 - Keine Team-/Mehrbenutzerfunktion in v1 (nur technisch vorbereitet)
 - Keine mobile App
 
@@ -208,7 +258,11 @@ in einer Kundenmail ist der einzige Fehler hier, der echten Schaden anrichtet.
 
 | Annahme / Risiko | Wenn es falsch ist |
 |---|---|
-| Copy & Paste ist im Alltag schnell genug | Sie nutzt es nicht, weil der Medienbruch nervt → Outlook-Add-in wird doch nötig (großer Umbau) |
+| Copy & Paste ist im Alltag schnell genug | Sie nutzt es nicht, weil der Medienbruch nervt → Outlook-Add-in wird doch nötig (großer Umbau). Entschärft dadurch, dass ihr Engpass Grübelzeit ist, nicht Tippzeit — dagegen wiegt ein Medienbruch leicht |
+| **Supabase pausiert nach einer Woche ohne Zugriff** | Nach dem Urlaub steht sie vor einer toten App und kann sie nicht selbst wecken. Gegenmaßnahme: wöchentlicher automatischer Weckruf, ersatzweise die bezahlte Stufe |
+| **Kundenerkennung schlägt fehl** | Kopiert sie nur den Mailtext ohne Kopfzeilen, steht der Absender bestenfalls in der Signatur; bei Erstkontakt gibt es gar keinen Kunden. Der Fehlschlag wird als Normalfall behandelt, nicht als Ausnahme — die App fragt dann schlicht nach |
+| **Bus-Faktor eins** | Nur der User baut und wartet. Fällt er aus, während Mistral, Cloudflare oder Supabase etwas umstellen, steht sie ohne Werkzeug da. Entschärfend: Sie kann jederzeit wieder ohne App arbeiten — und das muss so bleiben. Die App darf nie der einzige Weg werden |
+| Vierzehn Phasen ohne einen Blick von ihr | Der Ton entscheidet über den Erfolg und lässt sich erst beurteilen, wenn sie draufschaut. Empfehlung trotz „erst komplett, dann übergeben": zehn Minuten Draufschauen nach Phase 5 — das ist keine Übergabe |
 | Pseudonymisierung reicht als Schutz für Firmenkundendaten | Bei einem Firmen-Rollout wird ein AVV mit Supabase und Mistral nötig |
 | Mistral Large trifft ihren Ton und das Fach-Englisch | Qualität enttäuscht → Modellwechsel nötig, deshalb das Provider-Interface |
 | Regelableitung aus Textdiffs liefert brauchbare Vorschläge | Zu viele Fehlvorschläge nerven → auf Weg 1 (explizit sagen) zurückfallen |
