@@ -1,6 +1,8 @@
 # CLAUDE.md — E-Mail-App (DSGVO-konformer Mail-Assistent)
 
-> Stand: 2026-08-21 · Status: **Anforderungen geklärt (Drill abgeschlossen)** — Plan folgt, noch kein Code.
+> Stand: 2026-08-21 · Status: **Planung abgeschlossen und freigegeben. Der Bau beginnt mit Phase 0.**
+> Durchlaufen: Anforderungs-Drill ✓ · Spezifikation ✓ · Kreuzverhör ✓ · Freigabe durch den User ✓
+> Noch kein Code geschrieben.
 > Repo: https://github.com/simonbraendle16-ai/e-mail-app (privat)
 > Dieses Dokument ist die verbindliche Projekt-Referenz. Was hier steht, ist entschieden.
 
@@ -246,8 +248,14 @@ in einer Kundenmail ist der einzige Fehler hier, der echten Schaden anrichtet.
 
 - **Sprache:** Deutsch, korrekte Umlaute (ä, ö, ü, ß).
 - **Plan-Modus:** Plan immer erst per `ExitPlanMode` bestätigen lassen — nie eigenständig umsetzen.
-- **Reihenfolge:** Drill ✓ → CLAUDE.md ✓ → Repo ✓ → detaillierter Plan → Approval → Umsetzung
-  → `validierung`-Skill (Soll-Ist-Abgleich).
+- **Reihenfolge:** Drill ✓ → CLAUDE.md ✓ → Repo ✓ → Plan ✓ → Spezifikationen ✓ → Kreuzverhör ✓
+  → **Bau (hier stehen wir)** → nach jeder Phase Commit und kurze Meldung an den User
+  → nach Phase 5 zehn Minuten Draufschauen durch die Mutter → `validierung`-Skill zum Abschluss.
+- **Phasenweise arbeiten:** Eine Phase aus `PLAN.md` §6 nach der anderen. Am Ende jeder Phase
+  Commit mit sauberer Nachricht, Push, kurze Zusammenfassung. Keine Phase überspringen,
+  keine zwei Phasen gleichzeitig.
+- **Was hier steht, ist entschieden.** Weicht die Umsetzung von den Dokumenten ab, ist das eine
+  Änderung, die begründet und dem User vorgelegt wird — nicht eine, die stillschweigend passiert.
 - **Read-Effizienz:** Grep zum Lokalisieren, dann Read mit offset+limit. Keine Komplett-Reads
   über 100 Zeilen.
 - **Subagenten:** nur nach expliziter User-Bestätigung.
