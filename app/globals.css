@@ -51,13 +51,14 @@
   /* Das Werkstück */
   --color-papier: #fcfbf8; /* Fläche, auf der die fertige Mail liegt */
 
-  /* Dunkelgrün — Sekundärfarbe, alle Aktionen.
-     Aufgehellt gegenüber der ersten Fassung: #23402F kam auf 11,4:1 gegen Weiß
-     und wurde schlicht als Schwarz gelesen. Was grün ist, muss man anklicken
-     wollen — dafür muss man es als Grün erkennen. */
-  --color-gruen: #2f5b42; /* Knöpfe, aktive Zustände — 7,8:1 auf Weiß */
-  --color-gruen-tief: #23472f; /* gedrückt, überfahren */
-  --color-gruen-hell: #4f7a5f; /* Fokusrahmen, sekundäre Akzente — 4,0:1 auf Grund */
+  /* Grün — Sekundärfarbe, alle Aktionen.
+     Zwei Anläufe: #23402F (11,4:1) und #2F5B42 (7,8:1) wurden beide als
+     Schwarz gelesen. Der Fehler lag nicht an der Helligkeit allein — die
+     Sättigung war mit knapp 50 % zu niedrig. Jetzt 63 %, und der Ton ist
+     eindeutig grün. 5,2:1 auf Weiß, weiterhin über der Anforderung. */
+  --color-gruen: #2d7a4f; /* Knöpfe, aktive Zustände — 5,2:1 auf Weiß */
+  --color-gruen-tief: #24623f; /* gedrückt, überfahren */
+  --color-gruen-hell: #3e8a5c; /* Fokusrahmen — 3,4:1 auf Grund */
 
   /* Schrift */
   --color-text: #241f19; /* Fließtext, warmes Fast-Schwarz */

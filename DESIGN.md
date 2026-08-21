@@ -36,9 +36,9 @@ leicht ins Graugrüne gezogen, damit es mit dem Grün eine Familie bildet statt 
   --papier:       #FCFBF8;   /* Fläche, auf der die fertige Mail liegt */
 
   /* Dunkelgrün — Sekundärfarbe, alle Aktionen */
-  --gruen:        #2F5B42;   /* Knöpfe, aktive Zustände */
-  --gruen-tief:   #23472F;   /* gedrückt, überfahren */
-  --gruen-hell:   #4F7A5F;   /* Fokusrahmen, sekundäre Akzente */
+  --gruen:        #2D7A4F;   /* Knöpfe, aktive Zustände */
+  --gruen-tief:   #24623F;   /* gedrückt, überfahren */
+  --gruen-hell:   #3E8A5C;   /* Fokusrahmen, sekundäre Akzente */
 
   /* Schrift */
   --text:         #241F19;   /* Fließtext, warmes Fast-Schwarz */
@@ -51,10 +51,12 @@ leicht ins Graugrüne gezogen, damit es mit dem Grün eine Familie bildet statt 
 }
 ```
 
-**Aufgehellt in Phase 1.** Die erste Fassung (`#23402F`) kam auf 11,4:1 gegen Weiß und wurde
-schlicht als Schwarz gelesen — womit die Regel „was grün ist, kann man anklicken" ins Leere lief.
-Die jetzige Fassung liegt bei 7,8:1 auf Weiß und 6,3:1 auf dem Grund, bleibt also deutlich über
-der Anforderung, ist aber als Grün erkennbar. Entscheidung des Users nach der Sichtprüfung.
+**In Phase 1 zweimal korrigiert.** `#23402F` (11,4:1) und danach `#2F5B42` (7,8:1) wurden beide
+als Schwarz gelesen — womit die Regel „was grün ist, kann man anklicken" ins Leere lief.
+Der Fehler lag nicht an der Helligkeit allein: die Sättigung war mit knapp 50 % zu niedrig, und
+ein entsättigtes Dunkelgrün ist optisch schwarz. Die jetzige Fassung hat 63 % Sättigung und
+liegt bei 5,2:1 auf Weiß — weiter über der Anforderung von 4,5:1, aber eindeutig grün.
+Entscheidung des Users nach der Sichtprüfung.
 
 **Regeln**
 - Dunkelgrün ist die **einzige** Aktionsfarbe. Was grün ist, kann man anklicken.
@@ -184,9 +186,13 @@ kein Rahmen. Text erklärt, was zu tun ist, nicht was passiert ist.
 Die linke Fläche ist deutlich größer — sie ist der Normalfall. Die Begrüßung wechselt mit der
 Tageszeit, sonst passiert hier nichts.
 
-**Randbündig (Phase 1).** Kopfzeile und die beiden Flächen laufen bis an den Seitenrand statt in
-`--breite-seite` zu stehen. Sie sind das Erste, was sie morgens sieht, und sollen als Fläche
-wirken, nicht als Kästchen in der Bildschirmmitte. Die Liste „Zuletzt" darunter bleibt auf
+**Randbündig, ohne Abstand (Phase 1).** Die beiden Flächen sitzen bündig an der Fensterkante —
+kein Seitenabstand, keine Rundung, keine Lücke nach links oder rechts, und sie reichen von oben
+nach unten durch. Sie sind das Erste, was sie morgens sieht, und sollen als Fläche wirken, auf
+die man drauftippt, nicht als Kästchen in der Bildschirmmitte. Die Skizze oben zeigt noch die
+frühere, eingerückte Fassung.
+
+Die Kopfzeile fluchtet mit dem Seitenabstand darüber. Die Liste „Zuletzt" darunter bleibt auf
 `--breite-seite`: über die volle Fensterbreite gespreizt fielen Kunde und Datum so weit
 auseinander, dass man die Zeile zweimal lesen müsste.
 

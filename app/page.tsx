@@ -9,23 +9,26 @@ import { letzteMails } from "@/lib/beispieldaten";
  * Zwei Flächen. Die linke ist deutlich größer, weil sie der Normalfall ist:
  * Auf eine Mail antworten. Darunter die letzten Mails zum Weiterarbeiten.
  * Sonst passiert hier nichts.
+ *
+ * Die Flächen sitzen bündig am Rand und reichen von oben nach unten durch.
+ * Sie sind das Erste, was sie morgens sieht — sie sollen als Fläche wirken,
+ * auf die man drauftippt, nicht als Kästchen in der Bildschirmmitte.
  */
-
 export default function StartSeite() {
   return (
     <>
       <Kopfzeile />
-      <main className="px-4 py-7">
-        <Begruessung />
+      <main>
+        <div className="px-4 py-6">
+          <Begruessung />
+        </div>
 
-        {/* Links deutlich größer — sie ist der Normalfall.
-            Die beiden Flächen laufen bis an den Seitenrand: sie sind das
-            Erste, was sie morgens sieht, und sollen als Fläche wirken,
-            nicht als Kästchen in der Mitte. */}
-        <div className="grid grid-cols-[3fr_2fr] gap-4 mb-8">
+        {/* Randbündig: kein Abstand nach links, nach rechts oder zwischen
+            Fläche und Fensterkante. Links deutlich größer — der Normalfall. */}
+        <div className="grid grid-cols-[3fr_2fr] gap-1 min-h-[380px]">
           <Link
             href="/antworten"
-            className="bg-papier rounded-karte shadow-papier px-5 py-7 text-xl font-semibold text-text hover:bg-grund-tief transition-colors"
+            className="bg-papier px-6 py-7 text-2xl font-semibold text-text hover:bg-grund-tief transition-colors flex items-center"
           >
             Auf eine Mail
             <br />
@@ -34,7 +37,7 @@ export default function StartSeite() {
 
           <Link
             href="/antworten?art=neu"
-            className="bg-grund-tief rounded-karte border border-linie px-5 py-7 text-m font-semibold text-text hover:bg-papier transition-colors"
+            className="bg-grund-tief px-6 py-7 text-xl font-semibold text-text hover:bg-papier transition-colors flex items-center"
           >
             Neue Mail
             <br />
@@ -45,7 +48,7 @@ export default function StartSeite() {
         {/* Die Liste bleibt auf Lesebreite. Über die ganze Fensterbreite
             gespreizt fielen Kunde und Datum so weit auseinander, dass man
             die Zeile zweimal lesen müsste. */}
-        <div className="max-w-seite">
+        <div className="px-4 py-6 max-w-seite">
           <h2 className="text-s font-semibold text-text-leise mb-3">Zuletzt</h2>
 
           {letzteMails.length === 0 ? (
