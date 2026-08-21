@@ -1,0 +1,155 @@
+@import "tailwindcss";
+
+/* ===========================================================================
+   Designsystem — jeder Wert stammt wörtlich aus DESIGN.md.
+   Keine improvisierten Farben, keine Zwischengrößen, keine Ausnahmen.
+
+   Die Tailwind-Standardskalen für Schriftgrößen, Abstände und Radien werden
+   bewusst gelöscht (`initial`). Dadurch gibt es keine Zwischenwerte mehr:
+   `p-3` ist genau --abstand-3, `text-l` ist genau die Mail-Größe. Wer einen
+   Wert braucht, den es hier nicht gibt, hat laut DESIGN.md §3 ein
+   Strukturproblem, kein Abstandsproblem.
+   =========================================================================== */
+
+@theme {
+  /* --- Schriftgrößen: nur die sechs Marken aus DESIGN.md §2 --------------- */
+  --text-*: initial;
+
+  --text-xs: 13px; /* Zeitangaben, Zähler */
+  --text-xs--line-height: 18px;
+  --text-s: 15px; /* Beschriftungen über Feldern */
+  --text-s--line-height: 22px;
+  --text-m: 18px; /* Grundtext der Oberfläche */
+  --text-m--line-height: 28px;
+  --text-l: 21px; /* Der Mailtext (Serif) */
+  --text-l--line-height: 32px;
+  --text-xl: 26px; /* Bildschirmüberschrift */
+  --text-xl--line-height: 34px;
+  --text-2xl: 34px; /* Startseite */
+  --text-2xl--line-height: 42px;
+
+  /* --- Abstände: nur die acht Stufen aus DESIGN.md §3 --------------------- */
+  --spacing: initial;
+
+  --spacing-1: 4px;
+  --spacing-2: 8px;
+  --spacing-3: 16px;
+  --spacing-4: 24px;
+  --spacing-5: 32px;
+  --spacing-6: 48px;
+  --spacing-7: 64px;
+  --spacing-8: 96px;
+
+  /* --- Farben: DESIGN.md §1 ---------------------------------------------- */
+  --color-*: initial;
+
+  /* Grundflächen — Beige */
+  --color-grund: #ede7da; /* Hintergrund der gesamten App */
+  --color-grund-tief: #e2dacb; /* Eingabefelder, inaktive Flächen */
+  --color-linie: #cfc5b2; /* Trennlinien, Feldränder */
+
+  /* Das Werkstück */
+  --color-papier: #fcfbf8; /* Fläche, auf der die fertige Mail liegt */
+
+  /* Dunkelgrün — Sekundärfarbe, alle Aktionen */
+  --color-gruen: #23402f; /* Knöpfe, aktive Zustände */
+  --color-gruen-tief: #182c20; /* gedrückt, überfahren */
+  --color-gruen-hell: #4a7259; /* Fokusrahmen, sekundäre Akzente */
+
+  /* Schrift */
+  --color-text: #241f19; /* Fließtext, warmes Fast-Schwarz */
+  --color-text-leise: #6b6055; /* Beschriftungen, Hilfstexte */
+
+  /* Hinweise — gedeckt, nie grell */
+  --color-hinweis: #8a5a2b; /* Platzhalter, Warnungen */
+  --color-hinweis-flae: #f2e6d4; /* Fläche dazu */
+  --color-fehler: #8c3a2e;
+
+  /* Zwei Grundwerte, die kein Designtoken sind, aber gebraucht werden */
+  --color-weiss: #ffffff;
+  --color-transparent: transparent;
+
+  /* --- Radien: DESIGN.md §3 ---------------------------------------------- */
+  --radius-*: initial;
+
+  --radius-feld: 6px;
+  --radius-knopf: 8px;
+  --radius-karte: 10px;
+
+  /* --- Schatten: genau einer im ganzen System, er gehört dem Papier ------- */
+  --shadow-*: initial;
+
+  --shadow-papier:
+    0 1px 2px rgba(36, 31, 25, 0.04), 0 8px 24px rgba(36, 31, 25, 0.06);
+
+  /* --- Breiten: DESIGN.md §3 --------------------------------------------- */
+  --container-*: initial;
+
+  --container-inhalt: 720px; /* Textspalte — bewährte Lesebreite */
+  --container-seite: 1080px;
+
+  /* --- Schriften: DESIGN.md §2 ------------------------------------------- */
+  /* Die Variablen --schrift-sans/--schrift-serif liefert next/font in layout.tsx.
+     Beide Schriften werden selbst ausgeliefert, kein Google-CDN (CLAUDE.md §4).
+     Die Standardfamilien werden hier nicht gelöscht: der Namensraum --font-*
+     enthält auch die Schriftstärken, und die brauchen wir. */
+  --font-ui: var(--schrift-sans), system-ui, sans-serif;
+  --font-mail: var(--schrift-serif), Georgia, serif;
+
+  /* --- Bewegung: DESIGN.md §6 -------------------------------------------- */
+  --animate-*: initial;
+
+  --animate-auftauchen: auftauchen 200ms ease-out;
+
+  @keyframes auftauchen {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+/* ===========================================================================
+   Grundlagen
+   =========================================================================== */
+
+@layer base {
+  html {
+    /* Grundgröße ist 18 px, nicht 16 — sie liest den ganzen Tag. */
+    font-size: 18px;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--color-grund);
+    color: var(--color-text);
+    font-family: var(--font-ui);
+    font-size: var(--text-m);
+    line-height: var(--text-m--line-height);
+    font-weight: 400;
+    /* Kein dunkler Modus: sie arbeitet tagsüber am festen Rechner (DESIGN.md §1). */
+    color-scheme: light;
+  }
+
+  /* Fokusrahmen: 2 px in --gruen-hell, versetzt um 2 px.
+     Wird nirgends entfernt (DESIGN.md §4, §8). */
+  :focus-visible {
+    outline: 2px solid var(--color-gruen-hell);
+    outline-offset: 2px;
+  }
+
+  /* Bei prefers-reduced-motion entfällt auch die eine Animation (DESIGN.md §6). */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
