@@ -1,4 +1,7 @@
 import { Knopf } from "@/components/bausteine/knopf";
+import { Regelverwaltung } from "@/components/regelverwaltung";
+import { regelnAlle } from "@/lib/db/regeln";
+import { konflikteFinden } from "@/lib/lernen/konflikt";
 import {
   dokumente,
   glossar,
@@ -24,6 +27,11 @@ export default async function WissenSeite({
 }) {
   const { zustand } = await searchParams;
   const leer = zustand === "leer";
+
+  /* Ein Ausfall der Datenbank darf diesen Bildschirm nicht sprengen — er ist
+     Angebot, nicht Aufgabe. Dann steht der Abschnitt eben leer da. */
+  const regeln = await regelnAlle().catch(() => []);
+  const konflikte = konflikteFinden(regeln);
 
   return (
     <>
@@ -137,6 +145,19 @@ export default async function WissenSeite({
             </ul>
           )}
           <Knopf art="neben">Unterlage hinzufügen</Knopf>
+        </section>
+
+        {/* Vierter Abschnitt, in Phase 8 dazugekommen. `DESIGN.md` §5 nennt
+            für diesen Bildschirm drei — Glossar, Textbausteine, Dokumente.
+            Die Regelverwaltung aus `PLAN.md` §6 braucht aber einen Ort, und
+            keiner der fünf Bildschirme passt besser: Was die App gelernt
+            hat, ist Wissen. Vor allem gilt hier dieselbe Leitidee — Angebot,
+            nicht Aufgabe. Sie muss nie hierher, sie kann. */}
+        <section className="mt-7">
+          <h2 className="text-s font-semibold text-text-leise mb-3">
+            Was ich mir gemerkt habe
+          </h2>
+          <Regelverwaltung anfangsregeln={regeln} konflikte={konflikte} />
         </section>
       </main>
     </>

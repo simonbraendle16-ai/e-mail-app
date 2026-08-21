@@ -17,6 +17,7 @@ import {
   ungedeckteStellen,
 } from "@/components/befundstreifen";
 import { EnglischeFassung } from "@/components/englische-fassung";
+import { Mailwerkstatt } from "@/components/mailwerkstatt";
 import type { Befund } from "@/lib/pruefungen/typen";
 import {
   entwurfLesen,
@@ -376,38 +377,68 @@ function Ergebnis({
   kunde: KundeKurz | null;
 }) {
   const [gewaehlt, setGewaehlt] = useState<string | null>(null);
-  const [kopiert, setKopiert] = useState(false);
+
+  /* Was gerade auf dem Papier steht. Startet als die gewaehlte Fassung und
+     wandert mit jeder Korrektur weiter — die Werkstatt arbeitet an diesem
+     Text, nicht mehr an dem, was das Modell zuerst geliefert hat. */
+  const [fassung, setFassung] = useState<{ text: string; befunde: Befund[] } | null>(
+    null,
+  );
+
+  /* Frühere Fassungen, für „Fassung zurück". Sie liegen auch in der
+     Datenbank — hier stehen sie, damit ein Zurück sofort greift und keinen
+     Serverweg braucht. */
+  const [verlauf, setVerlauf] = useState<{ text: string; befunde: Befund[] }[]>(
+    [],
+  );
 
   const fassungen = [
     { marke: "knapp", titel: "Knapp", text: lage.knapp },
     { marke: "ausfuehrlich", titel: "Ausführlicher", text: lage.ausfuehrlich },
   ].filter((f) => f.text.trim());
 
-  async function kopieren(text: string) {
-    try {
-      await navigator.clipboard.writeText(text);
-      setKopiert(true);
-      setTimeout(() => setKopiert(false), 2000);
-    } catch {
-      /* Ohne Zwischenablage kann sie den Text markieren und selbst kopieren. */
-    }
+  function waehlen(marke: string) {
+    const text = fassungen.find((f) => f.marke === marke)?.text ?? lage.knapp;
+    setGewaehlt(marke);
+    setFassung({ text, befunde: lage.befunde });
+    setVerlauf([]);
   }
 
-  if (gewaehlt) {
-    const text = fassungen.find((f) => f.marke === gewaehlt)?.text ?? lage.knapp;
+  function neueFassung(text: string, befunde: Befund[]) {
+    setVerlauf((bisher) => (fassung ? [...bisher, fassung] : bisher));
+    setFassung({ text, befunde });
+  }
+
+  function fassungZurueck() {
+    setVerlauf((bisher) => {
+      const vorige = bisher[bisher.length - 1];
+      if (vorige) setFassung(vorige);
+      return bisher.slice(0, -1);
+    });
+  }
+
+  if (gewaehlt && fassung) {
     return (
       <div className="flex flex-col gap-5">
-        <Befundstreifen befunde={lage.befunde} />
-        <Papier>
-          <Mailtext text={text} ungedeckt={ungedeckteStellen(lage.befunde)} />
-        </Papier>
-        <div className="flex items-center gap-5">
-          <Knopf onClick={() => kopieren(text)}>
-            {kopiert ? "Kopiert" : "Kopieren"}
-          </Knopf>
+        <Mailwerkstatt
+          text={fassung.text}
+          befunde={fassung.befunde}
+          kundeId={kunde?.id || null}
+          kundenname={kunde?.name ?? null}
+          mailId={lage.mailId || null}
+          beiNeuerFassung={neueFassung}
+          beiFassungZurueck={fassungZurueck}
+          fassungZurueckMoeglich={verlauf.length > 0}
+        />
+
+        <div>
           <button
             type="button"
-            onClick={() => setGewaehlt(null)}
+            onClick={() => {
+              setGewaehlt(null);
+              setFassung(null);
+              setVerlauf([]);
+            }}
             className="text-m text-gruen hover:underline"
           >
             Andere Fassung
@@ -421,7 +452,7 @@ function Ergebnis({
             sie muss nichts umschalten. */}
         {kunde?.sprache === "en" ? (
           <EnglischeFassung
-            deutsch={text}
+            deutsch={fassung.text}
             kundeId={kunde.id || null}
             mailId={lage.mailId || null}
           />
@@ -459,7 +490,7 @@ function Ergebnis({
               />
             </Papier>
             <div>
-              <Knopf art="neben" onClick={() => setGewaehlt(fassung.marke)}>
+              <Knopf art="neben" onClick={() => waehlen(fassung.marke)}>
                 Diese nehmen
               </Knopf>
             </div>
