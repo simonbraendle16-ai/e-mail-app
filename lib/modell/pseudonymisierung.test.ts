@@ -55,6 +55,69 @@ describe("pseudonymisieren", () => {
     expect(zuordnung.tabelle.size).toBe(2);
   });
 
+  it("trennt die Anrede ab, statt sie mitzuersetzen", () => {
+    /* In der Gegenprüfung nach PLAN.md §8 in drei von vier Fällen aufgetreten:
+       Ist „Herr Meier" komplett ein Platzhalter, sieht das Modell dort keine
+       Anrede und setzt selbst eine davor — „Hallo Herr Herr Meier". */
+    const { texte, zuordnung } = pseudonymisieren(["Hallo Herr Meier,"], {
+      ansprechpartner: "Herr Meier",
+    });
+
+    expect(texte[0]).toBe("Hallo Herr [PERSON_1],");
+    expect(zuordnung.tabelle.get("[PERSON_1]")).toBe("Meier");
+  });
+
+  it("erzeugt nach der Rückersetzung kein doppeltes „Herr Herr“", () => {
+    const { zuordnung } = pseudonymisieren(["Herr Meier"], {
+      ansprechpartner: "Herr Meier",
+    });
+
+    const vomModell = "Hallo Herr [PERSON_1],";
+
+    expect(zurueckersetzen(vomModell, zuordnung)).toBe("Hallo Herr Meier,");
+  });
+
+  it("trennt auch mehrteilige Anreden ab", () => {
+    const { zuordnung } = pseudonymisieren(["Prof. Dr. Gruber"], {
+      ansprechpartner: "Prof. Dr. Gruber",
+    });
+
+    expect(zuordnung.tabelle.get("[PERSON_1]")).toBe("Gruber");
+  });
+
+  it("lässt einen Firmennamen mit „Herr“ darin unangetastet", () => {
+    /* „Herrmann & Söhne" fängt nicht mit einer Anrede an — nur ähnlich. */
+    const { zuordnung } = pseudonymisieren(["Herrmann & Söhne"], {
+      kunde: "Herrmann & Söhne",
+    });
+
+    expect(zuordnung.tabelle.get("[KUNDE_1]")).toBe("Herrmann & Söhne");
+  });
+
+  it("ersetzt auch ihren eigenen Namen", () => {
+    /* Der zweite Fund der Gegenprüfung: Steht ihr Name im Klartext in der
+       eingegangenen Mail und ist der Kundenname ersetzt, greift das Modell
+       nach dem einzigen sichtbaren Namen — und adressiert die Antwort an sie
+       selbst statt an den Kunden. */
+    const { texte } = pseudonymisieren(["Liebe Frau Brändle, ..."], {
+      ansprechpartner: "Frau Gruber",
+      ichSelbst: "Frau Brändle",
+    });
+
+    expect(texte[0]).not.toContain("Brändle");
+    expect(texte[0]).toContain("[ICH]");
+  });
+
+  it("setzt auch ihren eigenen Namen wieder ein", () => {
+    const { zuordnung } = pseudonymisieren(["Brändle"], {
+      ichSelbst: "Frau Brändle",
+    });
+
+    expect(zurueckersetzen("Mit freundlichen Grüßen, [ICH]", zuordnung)).toBe(
+      "Mit freundlichen Grüßen, Brändle",
+    );
+  });
+
   it("lässt sehr kurze Werte in Ruhe", () => {
     /* Ein einzelner Buchstabe als Name würde den ganzen Text zerhacken. */
     const { texte } = pseudonymisieren(["Ein Brief an alle"], { kunde: "A" });
@@ -129,5 +192,11 @@ describe("uebrigePlatzhalter", () => {
   it("verwechselt Lückenmarkierungen nicht mit Platzhaltern", () => {
     /* [Preis eintragen] ist gewollt und muss stehen bleiben. */
     expect(uebrigePlatzhalter("Der Preis ist [Preis eintragen].")).toEqual([]);
+  });
+
+  it("findet auch einen übrigen [ICH]-Platzhalter", () => {
+    expect(uebrigePlatzhalter("Mit freundlichen Grüßen, [ICH]")).toEqual([
+      "[ICH]",
+    ]);
   });
 });

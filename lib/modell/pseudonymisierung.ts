@@ -29,7 +29,72 @@ export type Klarnamen = {
   ansprechpartner?: string | null;
   /** Weitere Namen, etwa aus den bestätigten Fakten eines Kunden. */
   weitere?: readonly string[];
+  /**
+   * **Ihr eigener Name.**
+   *
+   * In der Gegenprüfung nach `PLAN.md` §8 aufgefallen: Steht in der
+   * eingegangenen Mail „Liebe Frau Brändle" und ist der Name der Kundin
+   * pseudonymisiert, greift das Modell nach dem einzigen Namen, den es noch
+   * sieht — und adressiert die Antwort an *sie selbst*. Die Mail ginge mit
+   * falscher Anrede an den Kunden raus.
+   *
+   * Deshalb wird ihr Name mitpseudonymisiert. Dann steht in der Vorlage kein
+   * Name mehr, nach dem das Modell greifen könnte.
+   */
+  ichSelbst?: string | null;
 };
+
+/**
+ * Anreden, die vor einem Namen stehen können.
+ *
+ * Sie werden **nicht** mitersetzt. Grund aus der Gegenprüfung: Ist der ganze
+ * Eintrag „Herr Meier" ein Platzhalter, sieht das Modell dort keine Anrede
+ * und setzt selbst eine davor — heraus kommt „Hallo Herr Herr Meier".
+ * Das trat in drei von vier Fällen auf.
+ *
+ * Bleibt die Anrede stehen und wird nur „Meier" ersetzt, schreibt das Modell
+ * „Hallo Herr [PERSON_1]" und die Rückersetzung ergibt „Hallo Herr Meier".
+ */
+const ANREDEN = [
+  "Herr",
+  "Herrn",
+  "Frau",
+  "Dr.",
+  "Prof.",
+  "Prof. Dr.",
+  "Mr",
+  "Mr.",
+  "Mrs",
+  "Mrs.",
+  "Ms",
+  "Ms.",
+];
+
+/**
+ * Trennt eine vorangestellte Anrede ab.
+ * „Herr Meier" → „Meier". „Meier & Co." → „Meier & Co." (unverändert).
+ */
+function ohneAnrede(wert: string): string {
+  let rest = wert.trim();
+  /* In einer Schleife, weil „Prof. Dr. Meier" zwei Anreden trägt. */
+  let gekuerzt = true;
+  while (gekuerzt) {
+    gekuerzt = false;
+    for (const anrede of ANREDEN) {
+      const praefix = `${anrede} `;
+      if (rest.toLowerCase().startsWith(praefix.toLowerCase())) {
+        const kandidat = rest.slice(praefix.length).trim();
+        /* Nur kürzen, wenn danach noch ein brauchbarer Name steht. */
+        if (kandidat.length >= 2) {
+          rest = kandidat;
+          gekuerzt = true;
+          break;
+        }
+      }
+    }
+  }
+  return rest;
+}
 
 /**
  * Baut die Zuordnungstabelle und ersetzt die Namen im Text.
@@ -51,20 +116,30 @@ export function pseudonymisieren(
   let kundeNr = 0;
   let personNr = 0;
 
-  const aufnehmen = (wert: string | null | undefined, art: "KUNDE" | "PERSON") => {
+  const aufnehmen = (
+    wert: string | null | undefined,
+    art: "KUNDE" | "PERSON" | "ICH",
+  ) => {
     if (!wert) return;
-    const sauber = wert.trim();
+    /* Anrede abtrennen — sonst schreibt das Modell „Herr [PERSON_1]" und
+       heraus kommt „Herr Herr Meier". */
+    const sauber = art === "KUNDE" ? wert.trim() : ohneAnrede(wert);
     if (sauber.length < 2) return; // ein Buchstabe zerschösse den Text
     if (eintraege.some((e) => e.wert === sauber)) return;
 
-    const nummer = art === "KUNDE" ? ++kundeNr : ++personNr;
-    eintraege.push({ wert: sauber, platzhalter: `[${art}_${nummer}]` });
+    const platzhalter =
+      art === "ICH"
+        ? "[ICH]"
+        : `[${art}_${art === "KUNDE" ? ++kundeNr : ++personNr}]`;
+
+    eintraege.push({ wert: sauber, platzhalter });
   };
 
   aufnehmen(namen.kunde, "KUNDE");
   aufnehmen(namen.firma, "KUNDE");
   aufnehmen(namen.ansprechpartner, "PERSON");
   for (const weiterer of namen.weitere ?? []) aufnehmen(weiterer, "PERSON");
+  aufnehmen(namen.ichSelbst, "ICH");
 
   eintraege.sort((a, b) => b.wert.length - a.wert.length);
 
@@ -108,6 +183,6 @@ export function zurueckersetzen(text: string, zuordnung: Zuordnung): string {
  * mögliche Fehler dieser App.
  */
 export function uebrigePlatzhalter(text: string): string[] {
-  const treffer = text.match(/\[(?:KUNDE|PERSON)_\d+\]/g);
+  const treffer = text.match(/\[(?:KUNDE|PERSON)_\d+\]|\[ICH\]/g);
   return treffer ? [...new Set(treffer)] : [];
 }
