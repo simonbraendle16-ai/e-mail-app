@@ -8,7 +8,8 @@ import Link from "next/link";
 export function Kopfzeile() {
   return (
     <header className="border-b border-linie">
-      <div className="mx-auto max-w-seite px-4 py-3 flex items-baseline justify-between">
+      {/* Randbündig, damit sie mit den Flächen auf der Startseite fluchtet. */}
+      <div className="px-4 py-3 flex items-baseline justify-between">
         <Link href="/" className="text-m font-semibold text-text">
           E-Mail
         </Link>

@@ -36,9 +36,9 @@ leicht ins Graugrüne gezogen, damit es mit dem Grün eine Familie bildet statt 
   --papier:       #FCFBF8;   /* Fläche, auf der die fertige Mail liegt */
 
   /* Dunkelgrün — Sekundärfarbe, alle Aktionen */
-  --gruen:        #23402F;   /* Knöpfe, aktive Zustände */
-  --gruen-tief:   #182C20;   /* gedrückt, überfahren */
-  --gruen-hell:   #4A7259;   /* Fokusrahmen, sekundäre Akzente */
+  --gruen:        #2F5B42;   /* Knöpfe, aktive Zustände */
+  --gruen-tief:   #23472F;   /* gedrückt, überfahren */
+  --gruen-hell:   #4F7A5F;   /* Fokusrahmen, sekundäre Akzente */
 
   /* Schrift */
   --text:         #241F19;   /* Fließtext, warmes Fast-Schwarz */
@@ -50,6 +50,11 @@ leicht ins Graugrüne gezogen, damit es mit dem Grün eine Familie bildet statt 
   --fehler:       #8C3A2E;
 }
 ```
+
+**Aufgehellt in Phase 1.** Die erste Fassung (`#23402F`) kam auf 11,4:1 gegen Weiß und wurde
+schlicht als Schwarz gelesen — womit die Regel „was grün ist, kann man anklicken" ins Leere lief.
+Die jetzige Fassung liegt bei 7,8:1 auf Weiß und 6,3:1 auf dem Grund, bleibt also deutlich über
+der Anforderung, ist aber als Grün erkennbar. Entscheidung des Users nach der Sichtprüfung.
 
 **Regeln**
 - Dunkelgrün ist die **einzige** Aktionsfarbe. Was grün ist, kann man anklicken.
@@ -178,6 +183,15 @@ kein Rahmen. Text erklärt, was zu tun ist, nicht was passiert ist.
 
 Die linke Fläche ist deutlich größer — sie ist der Normalfall. Die Begrüßung wechselt mit der
 Tageszeit, sonst passiert hier nichts.
+
+**Randbündig (Phase 1).** Kopfzeile und die beiden Flächen laufen bis an den Seitenrand statt in
+`--breite-seite` zu stehen. Sie sind das Erste, was sie morgens sieht, und sollen als Fläche
+wirken, nicht als Kästchen in der Bildschirmmitte. Die Liste „Zuletzt" darunter bleibt auf
+`--breite-seite`: über die volle Fensterbreite gespreizt fielen Kunde und Datum so weit
+auseinander, dass man die Zeile zweimal lesen müsste.
+
+**Die Begrüßung wird im Browser bestimmt**, nicht im Server. Der Server steht bei Cloudflare
+irgendwo im Netz und rechnet in UTC — serverseitig stünde morgens um neun „Guten Abend."
 
 ### Antworten — der Bildschirm, auf dem sie den Tag verbringt
 

@@ -15,10 +15,13 @@ export default function StartSeite() {
   return (
     <>
       <Kopfzeile />
-      <main className="mx-auto max-w-seite px-4 py-7">
+      <main className="px-4 py-7">
         <Begruessung />
 
-        {/* Links deutlich größer — sie ist der Normalfall. */}
+        {/* Links deutlich größer — sie ist der Normalfall.
+            Die beiden Flächen laufen bis an den Seitenrand: sie sind das
+            Erste, was sie morgens sieht, und sollen als Fläche wirken,
+            nicht als Kästchen in der Mitte. */}
         <div className="grid grid-cols-[3fr_2fr] gap-4 mb-8">
           <Link
             href="/antworten"
@@ -39,30 +42,35 @@ export default function StartSeite() {
           </Link>
         </div>
 
-        <h2 className="text-s font-semibold text-text-leise mb-3">Zuletzt</h2>
+        {/* Die Liste bleibt auf Lesebreite. Über die ganze Fensterbreite
+            gespreizt fielen Kunde und Datum so weit auseinander, dass man
+            die Zeile zweimal lesen müsste. */}
+        <div className="max-w-seite">
+          <h2 className="text-s font-semibold text-text-leise mb-3">Zuletzt</h2>
 
-        {letzteMails.length === 0 ? (
-          <p className="text-m text-text-leise">
-            Noch nichts geschrieben. Fang oben an.
-          </p>
-        ) : (
-          <ul className="flex flex-col">
-            {letzteMails.slice(0, 5).map((mail) => (
-              <li key={mail.id}>
-                <Link
-                  href="/antworten/ergebnis"
-                  className="flex items-baseline justify-between gap-4 py-3 border-b border-linie hover:bg-grund-tief transition-colors"
-                >
-                  <span className="text-m">
-                    {mail.kunde}
-                    <span className="text-text-leise"> · {mail.thema}</span>
-                  </span>
-                  <span className="text-xs text-text-leise">{mail.wann}</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
+          {letzteMails.length === 0 ? (
+            <p className="text-m text-text-leise">
+              Noch nichts geschrieben. Fang oben an.
+            </p>
+          ) : (
+            <ul className="flex flex-col">
+              {letzteMails.slice(0, 5).map((mail) => (
+                <li key={mail.id}>
+                  <Link
+                    href="/antworten/ergebnis"
+                    className="flex items-baseline justify-between gap-4 py-3 border-b border-linie hover:bg-grund-tief transition-colors"
+                  >
+                    <span className="text-m">
+                      {mail.kunde}
+                      <span className="text-text-leise"> · {mail.thema}</span>
+                    </span>
+                    <span className="text-xs text-text-leise">{mail.wann}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </main>
     </>
   );
