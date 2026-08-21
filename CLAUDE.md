@@ -1,8 +1,8 @@
 # CLAUDE.md — E-Mail-App (DSGVO-konformer Mail-Assistent)
 
-> Stand: 2026-08-21 · Status: **Planung abgeschlossen und freigegeben. Der Bau beginnt mit Phase 0.**
+> Stand: 2026-08-21 · Status: **Im Bau. Phase 0 und 1 stehen, Phase 2 abgeschlossen.**
 > Durchlaufen: Anforderungs-Drill ✓ · Spezifikation ✓ · Kreuzverhör ✓ · Freigabe durch den User ✓
-> Noch kein Code geschrieben.
+> Gebaut: Fundament ✓ · Design-Prototyp ✓ · Datenmodell ✓ — als Nächstes Phase 3 (Modellanbindung).
 > Repo: https://github.com/simonbraendle16-ai/e-mail-app (privat)
 > Dieses Dokument ist die verbindliche Projekt-Referenz. Was hier steht, ist entschieden.
 
@@ -69,7 +69,7 @@ Konkret: keine Pflegearbeit, keine Konfiguration, kein Lernaufwand, kein Tool da
 | App-Hosting | **Cloudflare Workers** (`@opennextjs/cloudflare`) | Dauerhaft kostenlos ohne Grauzone bei beruflicher Nutzung. Verworfen: Vercel — dessen Hobby-Tarif ist formal nicht für kommerzielle Nutzung gedacht, und sie setzt die App im Job ein. Die App selbst speichert nichts, alle Daten liegen in Supabase Frankfurt. *In Phase 0 von Pages auf Workers gewechselt* — Cloudflare hat Next.js-Deployments umgestellt, siehe `PLAN.md` §1. |
 | Modellzugang | **Start mit dem Mistral-Konto des Users, eigenes Konto für sie später** | Der Wechsel ist eine Umgebungsvariable. Getrennte Kosten und saubere Zuordnung, sobald sie ein eigenes Konto hat. |
 | Schriften | **Selbst ausgeliefert** (`next/font`), kein Google-CDN | Ein CDN-Aufruf überträgt ihre IP-Adresse an Google — vom LG München I 2022 abgemahnt (Az. 3 O 17493/20). Selbst ausgeliefert entsteht die Verbindung gar nicht erst. |
-| Nutzerkreis | **Nur sie** (+ Wartungskonto), aber **Row-Level-Security von Anfang an** | Kolleginnen später ohne Umbau möglich. Kostet jetzt fast nichts. |
+| Nutzerkreis | **Nur sie** (+ Wartungskonto), aber **Row-Level-Security von Anfang an** | Kolleginnen später ohne Umbau möglich. Kostet jetzt fast nichts. *Phase 2:* Das Wartungskonto sieht ihre Daten **nicht** — die Regel bleibt überall derselbe Einzeiler und ist nachweislich dicht. Später aufweichen geht jederzeit, eine Ausnahme wieder zumachen ist deutlich schwerer. |
 | LLM | **Mistral, EU-Endpunkt**, Provider hinter austauschbarem Interface | Siehe §4. Lokales Modell (Ollama, OpenAI-kompatibel) bleibt jederzeit anschließbar. |
 | Eingabe | **Tippen in v1**, Diktat später | Windows-Bordmittel `Win+H` deckt Diktat vorerst ab. Whisper-Anbindung ist ein eigener Brocken. |
 | Wissensaufbau | **Automatisch aus ihren Mails**; User liefert bei Gelegenheit zusätzlichen Kontext nach | Sie pflegt nichts, sie schreibt nur — die App lernt nebenbei. |
@@ -100,9 +100,29 @@ offengelegt und entschieden.
   **Auflösung:** Nach Ablauf der Frist wird jede Mail durch eine Verdichtung ersetzt — Anliegen,
   Tonfall, verwendete Formulierungen, gelernte Fakten; ohne Originalwortlaut, ohne Beträge, ohne
   Namen. Das Gedächtnis bleibt, der Rohtext geht. Kostet einen zusätzlichen Verarbeitungsschritt.
+
+  **In Phase 2 konkretisiert (Entscheidung des Users):**
+  - **Die Frist beträgt 100 Tage.**
+  - Der Wortlaut wird nicht gelöscht, sondern **archiviert**: Er bleibt in der Mailzeile stehen und
+    ist nachschlagbar, wenn ein Kunde nach Monaten auf eine Zusage zurückkommt.
+  - **Entscheidend ist, was das Modell sieht:** Die RAG-Abschnitte aus dem Wortlaut werden als
+    `aus_archiv` markiert und fallen aus der normalen Suche heraus. Ab dann arbeitet das Modell
+    mit der Verdichtung — an Mistral geht der Wortlaut also nicht mehr.
+  - **Sie kann das Archiv bewusst dazunehmen**, per Schalter, für eine einzelne Anfrage. Die
+    Ausnahme ist sichtbar und gewollt, nicht der Normalfall.
+
+  *Ehrlich eingeordnet:* Das ist weniger streng als „der Rohtext geht". Der Gewinn liegt darin,
+  dass der Wortlaut standardmäßig den Server nicht mehr verlässt — und genau dort saß das Risiko.
 - Kundennamen, Firmen und Ansprechpartner verschlüsselt; Schlüssel außerhalb der Datenbank.
   *Folge, die im Kreuzverhör auffiel:* Verschlüsselte Spalten sind nicht durchsuchbar — die
   Kundensuche braucht einen zusätzlichen Suchindex über Hashwerte. Mehrarbeit, eingeplant.
+
+  **In Phase 2 entschieden: verschlüsselt wird in der App, nicht in der Datenbank.** Bei pgcrypto
+  müsste der Schlüssel bei jeder Abfrage mitgeschickt werden und stünde damit in Supabases
+  Anfrageprotokollen — also genau dort, wovor die Verschlüsselung schützen soll. Jetzt sieht
+  Supabase nur Bytes (AES-256-GCM). Der Suchindex ist ein HMAC mit eigenem, getrenntem Schlüssel;
+  ohne den könnte jeder mit Datenbankzugriff einen Namen raten, hashen und vergleichen.
+  Preis: Teilwortsuche und Sortierung müssen nach dem Entschlüsseln im Server passieren.
 - Gegenüber Mistral durchgehend pseudonymisiert (`[KUNDE_1]`), Rückersetzung erst serverseitig.
   *Ehrlich eingeordnet:* Das senkt das Risiko, beseitigt es nicht. „200 Laib Bergkäse für die
   Filiale in Rotterdam" identifiziert den Kunden für jeden, der die Branche kennt; dazu kommen
@@ -267,7 +287,7 @@ in einer Kundenmail ist der einzige Fehler hier, der echten Schaden anrichtet.
 | Annahme / Risiko | Wenn es falsch ist |
 |---|---|
 | Copy & Paste ist im Alltag schnell genug | Sie nutzt es nicht, weil der Medienbruch nervt → Outlook-Add-in wird doch nötig (großer Umbau). Entschärft dadurch, dass ihr Engpass Grübelzeit ist, nicht Tippzeit — dagegen wiegt ein Medienbruch leicht |
-| **Supabase pausiert nach einer Woche ohne Zugriff** | Nach dem Urlaub steht sie vor einer toten App und kann sie nicht selbst wecken. Gegenmaßnahme: wöchentlicher automatischer Weckruf, ersatzweise die bezahlte Stufe |
+| ~~**Supabase pausiert nach einer Woche ohne Zugriff**~~ *(in Phase 2 entschärft)* | Zeitplan bei GitHub Actions, montags und donnerstags ein echter Schreibzugriff. Zweimal statt einmal, damit ein ausgefallener Lauf noch Puffer bis zur Wochenfrist lässt. Läuft bewusst nicht bei Cloudflare — sonst fiele der Weckruf zusammen mit der App aus. Dass GitHub Zeitpläne in ruhenden Repos nach 60 Tagen abschaltet, fängt ein monatliches Lebenszeichen ab |
 | **Kundenerkennung schlägt fehl** | Kopiert sie nur den Mailtext ohne Kopfzeilen, steht der Absender bestenfalls in der Signatur; bei Erstkontakt gibt es gar keinen Kunden. Der Fehlschlag wird als Normalfall behandelt, nicht als Ausnahme — die App fragt dann schlicht nach |
 | **Bus-Faktor eins** | Nur der User baut und wartet. Fällt er aus, während Mistral, Cloudflare oder Supabase etwas umstellen, steht sie ohne Werkzeug da. Entschärfend: Sie kann jederzeit wieder ohne App arbeiten — und das muss so bleiben. Die App darf nie der einzige Weg werden |
 | Vierzehn Phasen ohne einen Blick von ihr | Der Ton entscheidet über den Erfolg und lässt sich erst beurteilen, wenn sie draufschaut. Empfehlung trotz „erst komplett, dann übergeben": zehn Minuten Draufschauen nach Phase 5 — das ist keine Übergabe |

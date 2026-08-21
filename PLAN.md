@@ -1,7 +1,7 @@
 # Umsetzungsplan — E-Mail-App
 
 > Stand: 2026-08-21 · Grundlage: `CLAUDE.md` (Anforderungen nach Drill)
-> Status: **wartet auf Freigabe**. Vor Freigabe wird kein Code geschrieben.
+> Status: **freigegeben, im Bau.** Phase 0, 1 und 2 sind fertig.
 
 ---
 
@@ -64,6 +64,17 @@
 
 ## 2. Datenmodell
 
+> **Gebaut in Phase 2.** Die verbindliche Fassung sind die Migrationen unter
+> `supabase/migrations/`, die Typen dazu liegen in `lib/db/typen.gen.ts`.
+> Der Abschnitt hier bleibt als Übersicht stehen; er nennt die Spalten noch auf Englisch,
+> tatsächlich heißen sie wie der übrige Code auf Deutsch (`nutzer_id` statt `user_id`,
+> `erstellt_am` statt `created_at`). Die Tabellennamen selbst sind englisch geblieben.
+>
+> Drei Dinge kamen beim Bauen dazu, die hier noch fehlen:
+> - `emails.verdichtung` und `emails.verdichtet_am` — die 100-Tage-Regel (`CLAUDE.md` §4)
+> - `chunks.aus_archiv` — nimmt den Wortlaut nach der Verdichtung aus der normalen Suche
+> - `weckruf` — die Tabelle, in die der GitHub-Zeitplan zweimal die Woche schreibt
+
 Alle Tabellen tragen `user_id` und stehen unter Row-Level-Security (`user_id = auth.uid()`).
 
 ### Kern
@@ -116,8 +127,13 @@ Indizes: HNSW auf `embedding`, GIN auf `tsv`, B-Tree auf `customer_id`.
 `id`, `user_id`, `model`, `purpose`, `tokens_in`, `tokens_out`, `cost_estimate_eur`, `created_at`
 
 ### Datenschutz-Maßnahmen im Modell
-- `display_name`, `company`, `contact_person` werden mit `pgcrypto` verschlüsselt abgelegt;
-  der Schlüssel liegt in der Server-Umgebung, nicht in der Datenbank.
+- `display_name`, `company`, `contact_person` werden verschlüsselt abgelegt.
+  **In Phase 2 geändert: nicht mit `pgcrypto`, sondern in der App** (AES-256-GCM,
+  `lib/verschluesselung.ts`). Bei `pgcrypto` müsste der Schlüssel bei jeder Abfrage mitgeschickt
+  werden und stünde damit in Supabases Anfrageprotokollen — also genau dort, wovor die
+  Verschlüsselung schützen soll. Jetzt sieht Supabase nur Bytes. Vom User freigegeben.
+  Daneben liegt je ein HMAC-Suchwert mit eigenem Schlüssel, weil verschlüsselte Spalten sonst
+  nicht durchsuchbar sind. `lib/db/kunden.ts` ist die einzige Stelle, die die Geheimtexte kennt.
 - An Mistral gehen Kundennamen **pseudonymisiert** (`[Kunde]`, `[Ansprechpartner]`), Rückersetzung
   passiert erst im Server nach der Antwort. Kostet nichts an Qualität, nimmt aber das meiste Risiko raus.
 - Löschfunktion pro Kunde und pro Mail, kaskadierend inklusive Chunks. Vollständiger Datenexport als JSON.

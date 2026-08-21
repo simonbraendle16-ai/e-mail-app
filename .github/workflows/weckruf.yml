@@ -1,0 +1,117 @@
+name: Weckruf
+
+# Supabase schaltet Projekte auf der kostenlosen Stufe nach einer Woche ohne
+# Zugriff ab. Nach drei Wochen Urlaub stuende sie vor einer toten App, die sie
+# nicht selbst wecken kann (CLAUDE.md §9).
+#
+# Zweimal die Woche ein echter Schreibzugriff. Zweimal, nicht einmal: faellt
+# ein Lauf aus, ist immer noch Puffer bis zur Wochenfrist.
+#
+# Warum GitHub und nicht Cloudflare: Faellt das Cloudflare-Konto aus, faellt
+# der Weckruf sonst zusammen mit der App aus -- zwei Dinge an einem Faden.
+# Entscheidung des Users in Phase 2.
+
+on:
+  schedule:
+    # Montag und Donnerstag, 04:17 UTC. Krumme Minute mit Absicht:
+    # zur vollen Stunde laufen bei GitHub Millionen Zeitplaene gleichzeitig
+    # und einzelne werden verzoegert oder verworfen.
+    - cron: "17 4 * * 1,4"
+  # Von Hand ausloesbar -- zum Pruefen und nach einem Ausfall.
+  workflow_dispatch:
+
+# Schreibrecht wird fuer den Lebenszeichen-Schritt unten gebraucht.
+permissions:
+  contents: write
+
+jobs:
+  wecken:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Datenbank antippen
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${SUPABASE_URL:-}" ] || [ -z "${SUPABASE_SECRET_KEY:-}" ]; then
+            echo "::error::SUPABASE_URL oder SUPABASE_SECRET_KEY fehlt in den Repository-Secrets."
+            exit 1
+          fi
+
+          # Ein echter Schreibzugriff, kein blosses Lesen: nur so gilt das
+          # Projekt zuverlaessig als aktiv.
+          antwort=$(curl --silent --show-error --fail-with-body \
+            --max-time 30 \
+            --retry 3 --retry-delay 10 --retry-all-errors \
+            -X POST "${SUPABASE_URL}/rest/v1/weckruf" \
+            -H "apikey: ${SUPABASE_SECRET_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_SECRET_KEY}" \
+            -H "Content-Type: application/json" \
+            -H "Prefer: return=representation" \
+            -d '{"quelle":"github-actions"}')
+
+          echo "Projekt geweckt: ${antwort}"
+
+      - name: Alte Eintraege wegraeumen
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+        run: |
+          set -euo pipefail
+
+          # Der Weckruf soll die Datenbank wachhalten, nicht vollschreiben.
+          # Alles aelter als 90 Tage kann weg -- der letzte Lauf zaehlt.
+          grenze=$(date -u -d '90 days ago' '+%Y-%m-%dT%H:%M:%SZ')
+
+          curl --silent --show-error --fail-with-body \
+            --max-time 30 \
+            -X DELETE "${SUPABASE_URL}/rest/v1/weckruf?gelaufen_am=lt.${grenze}" \
+            -H "apikey: ${SUPABASE_SECRET_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_SECRET_KEY}"
+
+          echo "Eintraege vor ${grenze} entfernt."
+
+      # ----------------------------------------------------------------------
+      # GitHub schaltet Zeitplaene in Repos ohne Aktivitaet nach 60 Tagen ab.
+      # Solange hier gebaut wird, faellt das nicht auf -- nach der Uebergabe
+      # committet aber niemand mehr, und dann stuende der Weckruf still.
+      # Genau das waere der Fall, gegen den er gebaut ist (CLAUDE.md §9,
+      # Bus-Faktor eins).
+      #
+      # Deshalb einmal im Monat ein Lebenszeichen ins Repo. Zwoelf Commits im
+      # Jahr, dafuer laeuft der Zeitplan weiter, ohne dass jemand daran denken
+      # muss.
+      # ----------------------------------------------------------------------
+      - name: Repo wachhalten
+        uses: actions/checkout@v5
+
+      - name: Lebenszeichen (einmal im Monat)
+        run: |
+          set -euo pipefail
+
+          datei=".github/weckruf-zuletzt.txt"
+          heute=$(date -u '+%Y-%m-%d')
+          monat=$(date -u '+%Y-%m')
+
+          if [ -f "$datei" ] && grep -q "^${monat}" "$datei"; then
+            echo "Fuer ${monat} schon vermerkt -- nichts zu tun."
+            exit 0
+          fi
+
+          {
+            echo "${heute}"
+            echo
+            echo "Haelt den Zeitplan am Leben. GitHub schaltet Zeitplaene in"
+            echo "Repos ohne Aktivitaet nach 60 Tagen ab -- dieser Eintrag"
+            echo "verhindert das. Erzeugt vom Weckruf, nicht von Hand."
+          } > "$datei"
+
+          git config user.name  "Weckruf"
+          git config user.email "weckruf@users.noreply.github.com"
+          git add "$datei"
+          git commit -m "Weckruf: Lebenszeichen ${monat}"
+          git push

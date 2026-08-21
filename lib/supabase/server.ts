@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
+import type { Database } from "@/lib/db/typen";
 import {
   anmeldungEingerichtet,
   nurServer,
@@ -14,7 +15,7 @@ import {
 export async function serverZugang() {
   const kekse = await cookies();
 
-  return createServerClient(
+  return createServerClient<Database>(
     oeffentlich.supabaseUrl,
     oeffentlich.supabasePublishableKey,
     {
@@ -45,7 +46,7 @@ export async function serverZugang() {
  * Niemals aus einer Route aufrufen, die auf Nutzereingaben reagiert.
  */
 export function dienstZugang() {
-  return createClient(oeffentlich.supabaseUrl, nurServer("SUPABASE_SECRET_KEY"), {
+  return createClient<Database>(oeffentlich.supabaseUrl, nurServer("SUPABASE_SECRET_KEY"), {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 }
