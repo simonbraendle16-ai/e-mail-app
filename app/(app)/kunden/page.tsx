@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Kundenmarke } from "@/components/bausteine/kundenmarke";
-import { kunden } from "@/lib/beispieldaten";
+import { alleKunden } from "@/lib/db/kunden";
 
 export const metadata = { title: "Kunden" };
 
@@ -10,14 +10,27 @@ export const metadata = { title: "Kunden" };
  * Liste in einer Spalte: Name, Sprache, letzter Kontakt.
  * Nichts hier ist Pflichtfeld, nichts muss ausgefüllt werden, damit die App
  * funktioniert. Dieser Bildschirm ist Angebot, nicht Aufgabe.
+ *
+ * Seit Phase 9 stehen hier ihre echten Kunden. Sie entstehen von allein: Der
+ * erste kommt, sobald sie eine Mail schreibt — angelegt hat sie ihn nie.
  */
-export default async function KundenSeite({
-  searchParams,
-}: {
-  searchParams: Promise<{ zustand?: string }>;
-}) {
-  const { zustand } = await searchParams;
-  const liste = zustand === "leer" ? [] : kunden;
+function alsDatum(wert: string | null): string {
+  if (!wert) return "noch kein Kontakt";
+
+  try {
+    return new Date(wert).toLocaleDateString("de-DE", {
+      day: "numeric",
+      month: "long",
+    });
+  } catch {
+    return "";
+  }
+}
+
+export default async function KundenSeite() {
+  /* Ein Ausfall der Datenbank darf den Bildschirm nicht sprengen — sie soll
+     dann eine leere Liste sehen und weiterarbeiten können. */
+  const liste = await alleKunden().catch(() => []);
 
   return (
     <>
@@ -38,9 +51,12 @@ export default async function KundenSeite({
                   href={`/kunden/${kunde.id}`}
                   className="flex items-center justify-between gap-4 py-3 border-b border-linie hover:bg-grund-tief transition-colors"
                 >
-                  <Kundenmarke name={kunde.name} sprache={kunde.sprache} />
+                  <Kundenmarke
+                    name={kunde.anzeigename}
+                    sprache={kunde.sprache === "en" ? "en" : "de"}
+                  />
                   <span className="text-xs text-text-leise">
-                    {kunde.letzterKontakt}
+                    {alsDatum(kunde.letzter_kontakt_am)}
                   </span>
                 </Link>
               </li>

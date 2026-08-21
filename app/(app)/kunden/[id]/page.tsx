@@ -1,13 +1,11 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Zurueck } from "@/components/zurueck";
 import { Kundenmarke } from "@/components/bausteine/kundenmarke";
-import {
-  gelerntesUeberMeier,
-  kunden,
-  letzteMails,
-  regelnMeier,
-} from "@/lib/beispieldaten";
+import { Gelerntes } from "@/components/gelerntes";
+import { kundeLaden } from "@/lib/db/kunden";
+import { faktenZumKunden } from "@/lib/db/fakten";
+import { mailsZumKunden } from "@/lib/db/mails";
+import { regelnAlle } from "@/lib/db/regeln";
 
 /**
  * Die Kundenakte (DESIGN.md §5).
@@ -15,28 +13,12 @@ import {
  * Sprache, Ansprechpartner, was die App gelernt hat, gemerkte Regeln,
  * letzte Mails. Jeder gelernte Punkt hat ein kleines Kreuz zum Entfernen —
  * was die App über einen Kunden weiß, muss sie jederzeit widerrufen können.
+ *
+ * Seit Phase 9 stehen hier echte Daten. **Angelegt hat sie nichts davon:**
+ * Der Kunde entstand beim Schreiben, die gelernten Punkte kamen nebenbei aus
+ * ihren Mails. Nichts hier ist Pflichtfeld — die App funktioniert, auch wenn
+ * sie diesen Bildschirm nie öffnet.
  */
-
-/** Eine Zeile mit Entfernen-Kreuz. Verdrahtet wird das in Phase 9. */
-function Punkt({ text, zusatz }: { text: string; zusatz?: string }) {
-  return (
-    <li className="flex items-start justify-between gap-3 py-3 border-b border-linie">
-      <span className="text-m">
-        {text}
-        {zusatz ? (
-          <span className="text-xs text-text-leise"> · {zusatz}</span>
-        ) : null}
-      </span>
-      <button
-        type="button"
-        aria-label={`„${text}" entfernen`}
-        className="text-m text-text-leise hover:text-fehler px-2 rounded-feld shrink-0"
-      >
-        ✕
-      </button>
-    </li>
-  );
-}
 
 function Abschnitt({
   titel,
@@ -55,14 +37,26 @@ function Abschnitt({
   );
 }
 
+function alsDatum(wert: string | null): string {
+  if (!wert) return "";
+  try {
+    return new Date(wert).toLocaleDateString("de-DE", {
+      day: "numeric",
+      month: "long",
+    });
+  } catch {
+    return "";
+  }
+}
+
 export async function generateMetadata({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const kunde = kunden.find((k) => k.id === id);
-  return { title: kunde ? kunde.name : "Kunde" };
+  const kunde = await kundeLaden(id).catch(() => null);
+  return { title: kunde ? kunde.anzeigename : "Kunde" };
 }
 
 export default async function KundenakteSeite({
@@ -71,15 +65,27 @@ export default async function KundenakteSeite({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const kunde = kunden.find((k) => k.id === id);
+
+  const kunde = await kundeLaden(id).catch(() => null);
   if (!kunde) notFound();
 
-  /* Nur für Meier liegen im Prototyp gelernte Punkte vor — so ist auch
-     der Zustand „hier weiß ich noch nichts" zu sehen. */
-  const istMeier = kunde.id === "meier";
-  const gelerntes = istMeier ? gelerntesUeberMeier : [];
-  const regeln = istMeier ? regelnMeier : [];
-  const mails = letzteMails.filter((m) => m.kunde === kunde.name);
+  /* Jeder Teil einzeln und ausfallsicher: Fehlt einer, fehlt eben ein
+     Abschnitt — die Akte öffnet trotzdem. */
+  const [fakten, mails, alleRegeln] = await Promise.all([
+    faktenZumKunden(kunde.id),
+    mailsZumKunden(kunde.id),
+    regelnAlle().catch(() => []),
+  ]);
+
+  const regeln = alleRegeln.filter(
+    (r) => r.kundeId === kunde.id && r.status === "aktiv",
+  );
+
+  const beschreibung = [
+    kunde.ansprechpartner,
+    kunde.branche,
+    kunde.land,
+  ].filter(Boolean);
 
   return (
     <>
@@ -87,29 +93,31 @@ export default async function KundenakteSeite({
         <Zurueck nach="/kunden" />
 
         <h1 className="text-xl font-semibold mb-2">
-          <Kundenmarke name={kunde.name} sprache={kunde.sprache} />
+          <Kundenmarke
+            name={kunde.anzeigename}
+            sprache={kunde.sprache === "en" ? "en" : "de"}
+          />
         </h1>
-        <p className="text-m text-text-leise mb-6">
-          {kunde.ansprechpartner} · {kunde.branche} · {kunde.land}
-        </p>
+        {beschreibung.length > 0 ? (
+          <p className="text-m text-text-leise mb-6">
+            {beschreibung.join(" · ")}
+          </p>
+        ) : null}
 
-        <Abschnitt titel="So schreibt er">
-          <p className="text-m">{kunde.tonalitaet}</p>
-        </Abschnitt>
+        {kunde.tonalitaet ? (
+          <Abschnitt titel="So schreibt er">
+            <p className="text-m">{kunde.tonalitaet}</p>
+          </Abschnitt>
+        ) : null}
 
-        <Abschnitt
-          titel="Was ich gelernt habe"
-          leer={
-            gelerntes.length === 0
-              ? "Zu diesem Kunden weiß ich noch nichts. Das kommt mit der Zeit von allein."
-              : undefined
-          }
-        >
-          <ul>
-            {gelerntes.map((punkt) => (
-              <Punkt key={punkt} text={punkt} />
-            ))}
-          </ul>
+        <Abschnitt titel="Was ich gelernt habe">
+          <Gelerntes
+            punkte={fakten.map((f) => ({
+              id: f.id,
+              text: f.text,
+              bestaetigt: f.bestaetigt,
+            }))}
+          />
         </Abschnitt>
 
         <Abschnitt
@@ -122,7 +130,12 @@ export default async function KundenakteSeite({
         >
           <ul>
             {regeln.map((regel) => (
-              <Punkt key={regel.text} text={regel.text} zusatz={regel.art} />
+              <li
+                key={regel.id}
+                className="text-m py-3 border-b border-linie"
+              >
+                {regel.text}
+              </li>
             ))}
           </ul>
         </Abschnitt>
@@ -133,14 +146,16 @@ export default async function KundenakteSeite({
         >
           <ul className="flex flex-col">
             {mails.map((mail) => (
-              <li key={mail.id}>
-                <Link
-                  href="/antworten/ergebnis"
-                  className="flex items-baseline justify-between gap-4 py-3 border-b border-linie hover:bg-grund-tief transition-colors"
-                >
-                  <span className="text-m">{mail.thema}</span>
-                  <span className="text-xs text-text-leise">{mail.wann}</span>
-                </Link>
+              <li
+                key={mail.id}
+                className="flex items-baseline justify-between gap-4 py-3 border-b border-linie"
+              >
+                <span className="text-m">
+                  {mail.betreff ?? mail.ihre_stichworte ?? "Ohne Betreff"}
+                </span>
+                <span className="text-xs text-text-leise">
+                  {alsDatum(mail.erstellt_am)}
+                </span>
               </li>
             ))}
           </ul>

@@ -53,6 +53,32 @@ export async function letzteMails(anzahl = 5): Promise<Mail[]> {
   return data ?? [];
 }
 
+/**
+ * Die letzten Mails an einen bestimmten Kunden — für die Kundenakte.
+ *
+ * Ein Ausfall gibt eine leere Liste zurück statt zu werfen: Die Akte ist
+ * Angebot, nicht Aufgabe, und soll sich auch dann öffnen lassen, wenn ein
+ * Teil davon gerade nicht erreichbar ist.
+ */
+export async function mailsZumKunden(
+  kundeId: string,
+  anzahl = 5,
+): Promise<Mail[]> {
+  try {
+    const zugang = await serverZugang();
+    const { data } = await zugang
+      .from("emails")
+      .select()
+      .eq("kunde_id", kundeId)
+      .order("erstellt_am", { ascending: false })
+      .limit(anzahl);
+
+    return data ?? [];
+  } catch {
+    return [];
+  }
+}
+
 /** Eine Mail über ihre Kennung. Null, wenn es sie nicht gibt. */
 export async function mailLaden(id: string): Promise<Mail | null> {
   const zugang = await serverZugang();

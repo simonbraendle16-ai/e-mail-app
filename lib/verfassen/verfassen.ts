@@ -1,6 +1,7 @@
 import "server-only";
 import { formulieren } from "@/lib/modell";
 import { neuversuchHinweis, pruefen } from "@/lib/pruefungen/pruefen";
+import { faktenExtrahieren } from "@/lib/lernen/fakten";
 import type { Befund } from "@/lib/pruefungen/typen";
 import { skillWaehlen } from "@/lib/skills/auswahl";
 import { serverZugang } from "@/lib/supabase/server";
@@ -256,6 +257,23 @@ export async function* verfassen(
     });
 
     yield { art: "fertig", mailId, knapp, ausfuehrlich, befunde };
+
+    /* --- 6. Nebenbei lernen ------------------------------------------- */
+    /* **Nach** dem `fertig`: Sie soll ihre Mail sehen, sobald sie dasteht.
+       Die Faktenextraktion ist ein günstiger Aufruf, aber sie kostet
+       Sekunden, und keine davon darf zwischen ihr und dem Ergebnis liegen.
+       Ein Fehlschlag bleibt für sie unsichtbar — der Fakt fällt bei der
+       nächsten Mail an denselben Kunden wieder auf. */
+    if (kundeId) {
+      await faktenExtrahieren({
+        nutzerId,
+        kundeId,
+        eingehenderText,
+        antwort: knapp,
+        mailId,
+        abbruch: angaben.abbruch,
+      }).catch(() => 0);
+    }
   } catch (fehler) {
     const fuerSie =
       fehler instanceof Error && "fuerSie" in fehler

@@ -4,7 +4,7 @@
 > Durchlaufen: Anforderungs-Drill ✓ · Spezifikation ✓ · Kreuzverhör ✓ · Freigabe durch den User ✓
 > Gebaut: Fundament ✓ · Design-Prototyp ✓ · Datenmodell ✓ · Modellanbindung ✓ · Skill-Maschinerie ✓
 > · Verfassen Deutsch ✓ · Maschinelle Prüfungen ✓ · Übersetzung & Rückübersetzung ✓
-> · Korrekturschleife ✓ — als Nächstes Phase 9 (Kundengedächtnis).
+> · Korrekturschleife ✓ · Kundengedächtnis ✓ — als Nächstes Phase 10 (Wissensbasis).
 >
 > Damit sind **alle sechs** maschinellen Prüfungen aus `MODELL.md` §4 gebaut; die
 > Glossarprüfung kam in Phase 7 dazu, weil sie zwei Sprachen braucht.
@@ -14,7 +14,7 @@
 > aus `PLAN.md` §6 braucht einen Ort, und keiner der fünf Bildschirme passt besser.
 > Die Leitidee des Bildschirms bleibt gewahrt: Angebot, nicht Aufgabe.
 >
-> **Empfohlen vor Phase 9:** zehn Minuten Draufschauen durch die Mutter (PLAN.md §6, §9).
+> **Empfohlen vor Phase 10:** zehn Minuten Draufschauen durch die Mutter (PLAN.md §6, §9).
 > Repo: https://github.com/simonbraendle16-ai/e-mail-app (privat)
 > Dieses Dokument ist die verbindliche Projekt-Referenz. Was hier steht, ist entschieden.
 
