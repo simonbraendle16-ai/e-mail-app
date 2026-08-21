@@ -12,7 +12,8 @@ import { Textbereich } from "@/components/bausteine/feld";
  * das Feld dazu aber darunter erscheint — läge das Feld in derselben Zeile,
  * schöbe es beim Aufklappen die Knöpfe auseinander.
  *
- * Phase 1: Kulisse. Verdrahtet wird das in Phase 8.
+ * **Kulisse.** Die verdrahtete Fassung ist `components/mailwerkstatt.tsx`;
+ * diese hier zeigt nur, wie die Leiste aussehen soll.
  */
 export function Werkzeugleiste({ kundenname }: { kundenname: string }) {
   const [korrekturOffen, setKorrekturOffen] = useState(false);

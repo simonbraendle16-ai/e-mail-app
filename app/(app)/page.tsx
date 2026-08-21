@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Begruessung } from "@/components/begruessung";
-import { letzteMails } from "@/lib/beispieldaten";
+import { letzteMails } from "@/lib/db/mails";
+import { alleKunden } from "@/lib/db/kunden";
 
 /**
  * Bildschirm 1 — Start (DESIGN.md §5).
@@ -10,8 +11,42 @@ import { letzteMails } from "@/lib/beispieldaten";
  * deutlich größer, weil sie der Normalfall ist — dass derselbe Weg auch in
  * der Leiste steht, ist kein Widerspruch: die Leiste ist der kurze Sprung
  * von überall her, diese Fläche ist der Anfang des Tages.
+ *
+ * Seit Phase 12 steht unter „Zuletzt" ihre echte Historie.
  */
-export default function StartSeite() {
+
+function wann(wert: string | null): string {
+  if (!wert) return "";
+
+  try {
+    const datum = new Date(wert);
+    const tage = Math.floor((Date.now() - datum.getTime()) / 86_400_000);
+
+    /* „Heute" und „gestern" liest sich schneller als ein Datum, und mehr
+       als eine Woche zurück will sie ohnehin selten wissen. */
+    if (tage <= 0) return "heute";
+    if (tage === 1) return "gestern";
+    if (tage < 7) return `vor ${tage} Tagen`;
+
+    return datum.toLocaleDateString("de-DE", {
+      day: "numeric",
+      month: "long",
+    });
+  } catch {
+    return "";
+  }
+}
+
+export default async function StartSeite() {
+  /* Beides ausfallsicher: Die Startseite ist der Einstieg in den Tag. Sie
+     darf nicht der Ort sein, an dem eine klemmende Datenbank sie aufhält. */
+  const [mails, kunden] = await Promise.all([
+    letzteMails(5).catch(() => []),
+    alleKunden().catch(() => []),
+  ]);
+
+  const namen = new Map(kunden.map((k) => [k.id, k.anzeigename]));
+
   return (
     <main>
       <div className="px-5 pt-6 pb-4">
@@ -45,24 +80,27 @@ export default function StartSeite() {
       <div className="px-5 py-6 max-w-seite">
         <h2 className="text-s font-semibold text-text-leise mb-3">Zuletzt</h2>
 
-        {letzteMails.length === 0 ? (
+        {mails.length === 0 ? (
           <p className="text-m text-text-leise">
             Noch nichts geschrieben. Fang oben an.
           </p>
         ) : (
           <ul className="flex flex-col">
-            {letzteMails.slice(0, 5).map((mail) => (
-              <li key={mail.id}>
-                <Link
-                  href="/antworten/ergebnis"
-                  className="flex items-baseline justify-between gap-4 py-3 border-b border-linie hover:bg-grund-tief transition-colors"
-                >
-                  <span className="text-m">
-                    {mail.kunde}
-                    <span className="text-text-leise"> · {mail.thema}</span>
+            {mails.map((mail) => (
+              <li
+                key={mail.id}
+                className="flex items-baseline justify-between gap-4 py-3 border-b border-linie"
+              >
+                <span className="text-m">
+                  {mail.kunde_id ? (namen.get(mail.kunde_id) ?? "Ohne Kunde") : "Ohne Kunde"}
+                  <span className="text-text-leise">
+                    {" · "}
+                    {mail.ihre_stichworte ?? mail.betreff ?? "Ohne Betreff"}
                   </span>
-                  <span className="text-xs text-text-leise">{mail.wann}</span>
-                </Link>
+                </span>
+                <span className="text-xs text-text-leise">
+                  {wann(mail.erstellt_am)}
+                </span>
               </li>
             ))}
           </ul>

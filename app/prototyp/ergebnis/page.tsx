@@ -36,7 +36,14 @@ export const metadata = { title: "Ergebnis" };
  *  2. Gewählt — die Mail allein, direkt bearbeitbar, mit Kopieren,
  *     „Passt nicht?", Fassung zurück und der Bewertung.
  *
- * Phase 1: Kulisse. Die Logik entsteht in Phase 5 bis 8.
+ * **Kulisse, nicht die App.** In Phase 12 aus `/antworten/ergebnis` hierher
+ * gezogen: Die echte Ergebnisdarstellung sitzt seit Phase 8 im Antwort-
+ * Bildschirm selbst (`components/mailwerkstatt.tsx`). Eine Kulisse, die auf
+ * dem Weg der echten App liegt und etwas anderes zeigt als diese, ist ein
+ * zweiter Wahrheitsstand — und irgendwann glaubt jemand dem falschen.
+ *
+ * Sie bleibt erhalten, weil sie alle Zustände auf einen Blick zeigt und damit
+ * der schnellste Weg ist, das Design gegen `DESIGN.md` zu halten.
  */
 
 const meier = kunden[0]!;
@@ -97,7 +104,7 @@ export default async function ErgebnisSeite({
   return (
     <>
       <main className="max-w-seite px-5 py-6">
-        <Zurueck nach="/antworten" />
+        <Zurueck nach="/prototyp" />
 
         {/* Sie sieht immer, welcher Skill greift, und kann umschalten
             (SKILLS.md). Die Auswahl kommt aus den Skill-Dateien, nicht aus

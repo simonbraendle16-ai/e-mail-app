@@ -27,7 +27,7 @@ type Eintrag = {
 };
 
 const ARBEIT: Eintrag[] = [
-  { pfad: "/antworten", name: "Antworten", auchBei: ["/antworten/ergebnis"] },
+  { pfad: "/antworten", name: "Antworten" },
   { pfad: "/antworten?art=neu", name: "Neue Mail" },
 ];
 

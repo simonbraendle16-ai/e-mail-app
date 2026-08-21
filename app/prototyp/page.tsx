@@ -40,23 +40,23 @@ const gruppen: { titel: string; eintraege: { pfad: string; was: string }[] }[] =
       titel: "3 · Ergebnis",
       eintraege: [
         {
-          pfad: "/antworten/ergebnis",
+          pfad: "/prototyp/ergebnis",
           was: "Zwei Fassungen zur Auswahl — knapp und ausführlicher",
         },
         {
-          pfad: "/antworten/ergebnis?gewaehlt=knapp",
+          pfad: "/prototyp/ergebnis?gewaehlt=knapp",
           was: "Gewählte Fassung, bearbeitbar, mit Kopieren und Bewertung",
         },
         {
-          pfad: "/antworten/ergebnis?sprache=en",
+          pfad: "/prototyp/ergebnis?sprache=en",
           was: "Englischer Kunde — mit Rückübersetzung zum Gegenlesen",
         },
         {
-          pfad: "/antworten/ergebnis?gewaehlt=knapp&zustand=regelvorschlag",
+          pfad: "/prototyp/ergebnis?gewaehlt=knapp&zustand=regelvorschlag",
           was: "Abgeleitete Regel wird vorgeschlagen, nie still übernommen",
         },
         {
-          pfad: "/antworten/ergebnis?gewaehlt=knapp&zustand=zahl-ohne-beleg",
+          pfad: "/prototyp/ergebnis?gewaehlt=knapp&zustand=zahl-ohne-beleg",
           was: "Eine Angabe stand nirgends — sie muss es sehen",
         },
       ],
