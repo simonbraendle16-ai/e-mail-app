@@ -1,6 +1,6 @@
 "use client";
 
-import type { InputHTMLAttributes, TextareaHTMLAttributes } from "react";
+import type { InputHTMLAttributes, Ref, TextareaHTMLAttributes } from "react";
 import { useId } from "react";
 
 /**
@@ -53,6 +53,10 @@ export function Feld({
 type BereichEigenschaften = TextareaHTMLAttributes<HTMLTextAreaElement> & {
   beschriftung: string;
   hilfe?: string;
+  /* Ab React 19 ist ref eine normale Eigenschaft -- kein forwardRef noetig.
+     Gebraucht wird sie, um den getippten Text auszulesen, ohne bei jedem
+     Tastendruck neu zu zeichnen. */
+  ref?: Ref<HTMLTextAreaElement>;
 };
 
 export function Textbereich({
@@ -60,6 +64,7 @@ export function Textbereich({
   hilfe,
   className = "",
   id,
+  ref,
   ...rest
 }: BereichEigenschaften) {
   const erzeugteId = useId();
@@ -73,6 +78,7 @@ export function Textbereich({
       </label>
       <textarea
         {...rest}
+        ref={ref}
         id={feldId}
         aria-describedby={hilfeId}
         className={`${feldStil} resize-y ${className}`}

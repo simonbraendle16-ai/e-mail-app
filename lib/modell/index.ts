@@ -66,6 +66,12 @@ export type AufrufAngaben = {
   hoechstlaenge?: number;
   streuung?: number;
   abbruch?: AbortSignal;
+  /**
+   * Schluessel fuers Prompt-Caching (MODELL.md 7). Muss ueber gleichartige
+   * Aufrufe stabil sein -- ohne ihn cacht Mistral nicht, und die stabilen
+   * Anweisungsbloecke kosten jedes Mal voll.
+   */
+  zwischenspeicherSchluessel?: string;
 };
 
 function auftragBauen(
@@ -82,6 +88,7 @@ function auftragBauen(
         hoechstlaenge: angaben.hoechstlaenge,
         streuung: angaben.streuung,
         abbruch: angaben.abbruch,
+        zwischenspeicherSchluessel: angaben.zwischenspeicherSchluessel,
       },
       zurueck: (text) => text,
     };
@@ -100,6 +107,7 @@ function auftragBauen(
       hoechstlaenge: angaben.hoechstlaenge,
       streuung: angaben.streuung,
       abbruch: angaben.abbruch,
+      zwischenspeicherSchluessel: angaben.zwischenspeicherSchluessel,
     },
     zurueck: (text) => zurueckersetzen(text, zuordnung),
   };

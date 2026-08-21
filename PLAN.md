@@ -1,7 +1,7 @@
 # Umsetzungsplan — E-Mail-App
 
 > Stand: 2026-08-21 · Grundlage: `CLAUDE.md` (Anforderungen nach Drill)
-> Status: **freigegeben, im Bau.** Phase 0 bis 4 sind fertig.
+> Status: **freigegeben, im Bau.** Phase 0 bis 5 sind fertig.
 
 ---
 
