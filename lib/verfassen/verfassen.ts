@@ -8,6 +8,7 @@ import { skillWaehlen } from "@/lib/skills/auswahl";
 import { serverZugang } from "@/lib/supabase/server";
 import {
   anweisungBauen,
+  brauchbareAntwort,
   fassungenTrennen,
   zwischenspeicherSchluessel,
 } from "./anweisung";
@@ -184,8 +185,14 @@ export async function* verfassen(
        kostet noch einmal Geld und Wartezeit — und wenn das Modell zweimal
        dieselbe Anweisung überliest, hilft ein drittes Mal auch nicht.
        Was dann noch offen ist, sieht sie als Warnung. */
+    /* Warum neu versucht wird. Der Satz, den sie liest, hängt daran: „Da war
+       etwas drin, das du nicht wolltest" ist bei einer ausgebliebenen Antwort
+       schlicht falsch — und eine Meldung, die nicht zum Erlebten passt, macht
+       aus einer Panne ein Rätsel. */
+    let neuWeil: "regel" | "leer" | null = null;
+
     for (let versuch = 0; versuch < 2; versuch++) {
-      const hinweis = versuch === 0 ? null : neuversuchHinweis(befunde);
+      const hinweis = neuWeil === "regel" ? neuversuchHinweis(befunde) : null;
 
       if (versuch === 0) {
         yield { art: "schritt", text: "Ich formuliere." };
@@ -196,7 +203,10 @@ export async function* verfassen(
         yield { art: "neuversuch" };
         yield {
           art: "schritt",
-          text: "Da war noch etwas drin, das du nicht wolltest. Ich schreibe es neu.",
+          text:
+            neuWeil === "leer"
+              ? "Da kam nichts zurück. Ich versuche es noch einmal."
+              : "Da war noch etwas drin, das du nicht wolltest. Ich schreibe es neu.",
         };
       }
 
@@ -239,11 +249,36 @@ export async function* verfassen(
         }
       }
 
+      /* **Leere oder unbrauchbare Antwort** (`MODELL.md` §5): „Ein Neuversuch,
+         dann ehrliche Meldung — kein leerer Bildschirm."
+
+         Das muss **vor** der Prüfung stehen. Die maschinellen Prüfungen
+         finden an einem leeren Text nichts zu beanstanden — `aufbau()` steigt
+         bei leerem Text aus —, und ohne diesen Zweig ginge die leere Mail als
+         fertig durch. Sie stünde dann vor genau dem leeren Bildschirm, den
+         `MODELL.md` ausschließt. */
+      if (!brauchbareAntwort(gesamt)) {
+        if (versuch === 0) {
+          befunde = [];
+          neuWeil = "leer";
+          continue;
+        }
+
+        /* Zweimal nichts — dann ehrlich sein statt eine leere Mail zeigen. */
+        yield {
+          art: "fehler",
+          text: "Ich bekomme gerade keine Antwort zusammen. Dein Text ist gespeichert, probier es in einer Minute nochmal.",
+        };
+        return;
+      }
+
       befunde = pruefen({ entwurf: gesamt, quellen, regeln: kontext.regeln });
 
       /* Nichts, was ein Neuversuch beheben könnte — erfundene Angaben werden
          ausdrücklich **nicht** still neu geschrieben, sie werden ihr gezeigt. */
       if (!neuversuchHinweis(befunde)) break;
+
+      neuWeil = "regel";
     }
 
     /* --- 5. Aufteilen und sichern ------------------------------------- */

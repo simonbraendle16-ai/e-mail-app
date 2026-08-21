@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { fassungenTrennen, ROLLE, ZWEI_FASSUNGEN } from "./anweisung";
+import {
+  brauchbareAntwort,
+  fassungenTrennen,
+  ROLLE,
+  ZWEI_FASSUNGEN,
+} from "./anweisung";
 
 /**
  * Das Trennen der Fassungen versagt still: Kommt es durcheinander, sieht sie
@@ -99,5 +104,63 @@ describe("die Zwei-Fassungen-Anweisung", () => {
 
   it("begrenzt die knappe Fassung", () => {
     expect(ZWEI_FASSUNGEN).toContain("höchstens fünf Sätze");
+  });
+});
+
+/**
+ * `MODELL.md` §5: „Antwort leer oder unbrauchbar → Ein Neuversuch, dann
+ * ehrliche Meldung — **kein leerer Bildschirm**."
+ *
+ * Die maschinellen Prüfungen fangen diesen Fall nicht ab: An einem leeren
+ * Text finden sie nichts zu beanstanden. Ohne diese Prüfung ginge die leere
+ * Mail als fertige Mail durch, und sie stünde vor genau dem leeren
+ * Bildschirm, den die Spezifikation ausschließt.
+ */
+describe("brauchbareAntwort", () => {
+  const ECHT = `Hallo Herr Meier,
+
+die Lieferung geht wie besprochen raus.
+
+Viele Grüße`;
+
+  it("lässt eine echte Mail durch", () => {
+    expect(brauchbareAntwort(ECHT)).toBe(true);
+  });
+
+  it("weist eine leere Antwort ab", () => {
+    expect(brauchbareAntwort("")).toBe(false);
+    expect(brauchbareAntwort("   \n\n  ")).toBe(false);
+  });
+
+  it("weist einen Rest ab, der keine Mail sein kann", () => {
+    expect(brauchbareAntwort("Hallo,")).toBe(false);
+  });
+
+  it("weist eine Absage des Modells ab", () => {
+    /* Manche Modelle antworten statt mit einer Mail mit einer Erklärung,
+       warum sie nicht können. Das ist kein Entwurf, auch wenn es aussieht
+       wie Text — und ungefiltert stünde es als Mail an einen Kunden da. */
+    expect(
+      brauchbareAntwort(
+        "I'm sorry, I cannot help with composing this email for you.",
+      ),
+    ).toBe(false);
+    expect(
+      brauchbareAntwort(
+        "Es tut mir leid, aber ich kann diese Mail nicht schreiben.",
+      ),
+    ).toBe(false);
+  });
+
+  it("hält eine Mail, die eine Entschuldigung enthält, nicht für eine Absage", () => {
+    /* „Es tut mir leid, die Lieferung verzögert sich" ist genau die Art Mail,
+       die sie täglich schreibt. Die darf nicht als Absage durchfallen —
+       sonst schlägt die Prüfung ausgerechnet bei den unangenehmen Mails zu,
+       bei denen die App am meisten hilft. */
+    expect(
+      brauchbareAntwort(
+        "Hallo Herr Meier,\n\nes tut mir leid, die Lieferung verzögert sich um zwei Tage.\n\nViele Grüße",
+      ),
+    ).toBe(true);
   });
 });

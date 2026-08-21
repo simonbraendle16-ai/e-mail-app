@@ -207,6 +207,39 @@ Trenne sie durch eine Zeile mit ---
 Keine Überschriften, keine Erklärungen.`;
 
 /**
+ * Taugt die Antwort des Modells überhaupt als Mail? (`MODELL.md` §5:
+ * „Antwort leer oder unbrauchbar → Ein Neuversuch, dann ehrliche Meldung —
+ * kein leerer Bildschirm.")
+ *
+ * **Warum es diese Prüfung getrennt von den maschinellen Prüfungen gibt:**
+ * Jene setzen einen Text voraus, an dem es etwas zu prüfen gibt. An einer
+ * leeren Antwort finden sie nichts zu beanstanden — und ohne diesen Zweig
+ * ginge sie als fertige Mail durch.
+ *
+ * Der zweite Fall ist die Absage: Manche Modelle antworten statt mit einer
+ * Mail mit einer Erklärung, warum sie nicht können. Das ist kein Entwurf,
+ * auch wenn es aussieht wie Text.
+ */
+export function brauchbareAntwort(text: string): boolean {
+  const sauber = text.trim();
+
+  /* Kürzer als das ist keine Mail, sondern ein Rest. Eine echte Antwort hat
+     mindestens Anrede und einen Satz. */
+  if (sauber.length < 40) return false;
+
+  /* Eine Absage des Modells — meist englisch, meist am Anfang. */
+  if (
+    /^(i'?m sorry|i cannot|i can'?t|as an ai|es tut mir leid, aber ich kann|ich kann (dir|ihnen) dabei nicht)/i.test(
+      sauber,
+    )
+  ) {
+    return false;
+  }
+
+  return true;
+}
+
+/**
  * Zerlegt die Antwort in die beiden Fassungen.
  *
  * Das Modell hält sich meistens an die Trennzeile, aber nicht immer. Kommt nur

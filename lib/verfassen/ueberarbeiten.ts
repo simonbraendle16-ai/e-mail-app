@@ -6,6 +6,7 @@ import { regelAnlegen, regelnAlle } from "@/lib/db/regeln";
 import { rueckfallSkill } from "@/lib/skills/register";
 import { pruefen } from "@/lib/pruefungen/pruefen";
 import type { Befund } from "@/lib/pruefungen/typen";
+import { brauchbareAntwort } from "./anweisung";
 import { kontextSammeln } from "./kontext";
 import { regelAbleiten, type Regelvorschlag } from "@/lib/lernen/ableitung";
 
@@ -118,6 +119,18 @@ export async function* ueberarbeiten(
         gesamt += stueck.text;
         yield { art: "text", text: stueck.text };
       }
+    }
+
+    /* Kommt nichts zurück, wird die bisherige Fassung **nicht** überschrieben.
+       Hier wiegt das schwerer als beim ersten Entwurf: Dort gäbe es nur einen
+       leeren Bildschirm, hier stünde ihre fertige Mail auf dem Spiel. Also
+       ehrlich melden und den Text lassen, wo er ist (`MODELL.md` §5). */
+    if (!brauchbareAntwort(gesamt)) {
+      yield {
+        art: "fehler",
+        text: "Da kam nichts zurück. Deine Mail ist unverändert — probier es gleich nochmal.",
+      };
+      return;
     }
 
     /* Dieselben Prüfungen wie beim ersten Entwurf. Eine überarbeitete Mail
