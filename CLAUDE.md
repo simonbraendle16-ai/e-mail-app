@@ -66,7 +66,7 @@ Konkret: keine Pflegearbeit, keine Konfiguration, kein Lernaufwand, kein Tool da
 | Rechtsrahmen | **Privates Werkzeug** für sie | Kein Firmen-Rollout. Konsequenz: Kundendaten werden pseudonymisiert gespeichert, technisch fahren wir trotzdem die DSGVO-Maximalvariante. |
 | Datenhaltung | **Supabase, EU-Region Frankfurt** | pgvector für RAG, Auth, Backups, Updates ohne Zugriff auf ihren Rechner. Preis: US-Konzern → CLOUD-Act-Restrisiko, abgefedert durch Pseudonymisierung. Verworfen: lokales SQLite (kein Fernupdate), eigener Hetzner-Server (Admin-Aufwand). |
 | Auslieferung | **Gehostete Web-App**, sie öffnet eine URL und ist eingeloggt | Kein Start, kein Terminal, keine Installation. |
-| App-Hosting | **Cloudflare Pages** | Dauerhaft kostenlos ohne Grauzone bei beruflicher Nutzung. Verworfen: Vercel — dessen Hobby-Tarif ist formal nicht für kommerzielle Nutzung gedacht, und sie setzt die App im Job ein. Die App selbst speichert nichts, alle Daten liegen in Supabase Frankfurt. |
+| App-Hosting | **Cloudflare Workers** (`@opennextjs/cloudflare`) | Dauerhaft kostenlos ohne Grauzone bei beruflicher Nutzung. Verworfen: Vercel — dessen Hobby-Tarif ist formal nicht für kommerzielle Nutzung gedacht, und sie setzt die App im Job ein. Die App selbst speichert nichts, alle Daten liegen in Supabase Frankfurt. *In Phase 0 von Pages auf Workers gewechselt* — Cloudflare hat Next.js-Deployments umgestellt, siehe `PLAN.md` §1. |
 | Modellzugang | **Start mit dem Mistral-Konto des Users, eigenes Konto für sie später** | Der Wechsel ist eine Umgebungsvariable. Getrennte Kosten und saubere Zuordnung, sobald sie ein eigenes Konto hat. |
 | Schriften | **Selbst ausgeliefert** (`next/font`), kein Google-CDN | Ein CDN-Aufruf überträgt ihre IP-Adresse an Google — vom LG München I 2022 abgemahnt (Az. 3 O 17493/20). Selbst ausgeliefert entsteht die Verbindung gar nicht erst. |
 | Nutzerkreis | **Nur sie** (+ Wartungskonto), aber **Row-Level-Security von Anfang an** | Kolleginnen später ohne Umbau möglich. Kostet jetzt fast nichts. |
@@ -240,7 +240,7 @@ in einer Kundenmail ist der einzige Fehler hier, der echten Schaden anrichtet.
 - **Supabase:** Free-Tier reicht (500 MB, pgvector inklusive). Pausiert erst nach einer Woche
   Inaktivität — bei täglicher Nutzung irrelevant.
 - **Hosting:** kostenlos. Achtung: Vercels Hobby-Tarif ist formal nicht für kommerzielle Nutzung
-  vorgesehen; Cloudflare Pages hat diese Einschränkung nicht und ist daher die sicherere Wahl.
+  vorgesehen; Cloudflare Workers hat diese Einschränkung nicht und ist daher die sicherere Wahl.
 - **Kostenbremse in der App:** Modellwahl pro Aufgabe (kleines Modell für Routine, großes für
   die finale Formulierung), Prompt-Caching, Nutzungsanzeige für den User.
 

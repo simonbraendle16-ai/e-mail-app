@@ -11,8 +11,8 @@
 |---|---|
 | Repo | https://github.com/simonbraendle16-ai/e-mail-app (privat) |
 | Lokal | `C:\Users\sabin\Downloads\Agentic Coding\Apps\E-Mail App für meine Mutter` |
-| Code | noch keiner |
-| Nächster Schritt | **Phase 0 — Fundament**, danach Phase 1 — Design-Prototyp |
+| Code | Phase 0 läuft — Fundament, Designsystem und Anmeldung stehen |
+| Nächster Schritt | Phase 0 abschließen (Supabase-Zugang, Auslieferung), danach Phase 1 — Design-Prototyp |
 
 ## Die fünf verbindlichen Dokumente
 

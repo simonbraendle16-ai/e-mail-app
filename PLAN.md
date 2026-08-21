@@ -31,7 +31,7 @@
 
 | Baustein | Wahl | Warum, und was verworfen wurde |
 |---|---|---|
-| Framework | **Next.js 15, App Router, TypeScript** | Server Actions halten den API-Key serverseitig, ein Deployment für UI und Backend. Verworfen: getrenntes Frontend + eigene API (doppelter Betriebsaufwand ohne Nutzen bei einer Nutzerin). |
+| Framework | **Next.js 16, App Router, TypeScript** | Server Actions halten den API-Key serverseitig, ein Deployment für UI und Backend. Verworfen: getrenntes Frontend + eigene API (doppelter Betriebsaufwand ohne Nutzen bei einer Nutzerin). *In Phase 0 von 15 auf 16 gehoben:* Next.js 15 trägt drei Sicherheitslücken hoher Stufe (postcss, sharp), behoben erst in 16. Vom User freigegeben nach dem Grundsatz „immer der saubere Weg". |
 | UI | **Tailwind + shadcn/ui**, eigenes ruhiges Theme | Große Schrift, hoher Kontrast, wenige Elemente. Nicht: Material/Bootstrap-Look, der nach Verwaltungssoftware aussieht. |
 | Datenbank | **Supabase Postgres, Region eu-central-1 (Frankfurt)** | pgvector, Volltextsuche, Auth und RLS in einem. |
 | Auth | **Magic Link per E-Mail** | Kein Passwort, das sie sich merken oder zurücksetzen muss. Sie klickt einmal im Monat einen Link. |
@@ -42,8 +42,16 @@
 
 ### Entschieden
 
-1. **Deployment: Cloudflare Pages.** Kostenlos ohne Grauzone bei beruflicher Nutzung.
-   Vercel verworfen, weil dessen Hobby-Tarif formal nicht für kommerzielle Nutzung gedacht ist.
+1. **Deployment: Cloudflare Workers** über `@opennextjs/cloudflare`. Kostenlos ohne Grauzone bei
+   beruflicher Nutzung. Vercel verworfen, weil dessen Hobby-Tarif formal nicht für kommerzielle
+   Nutzung gedacht ist.
+   *In Phase 0 von Pages auf Workers gewechselt:* Cloudflare hat Next.js-Deployments umgestellt,
+   der Pages-Adapter `@cloudflare/next-on-pages` taucht in der aktuellen Doku nicht mehr auf.
+   Kostenlage und Rechtslage bleiben unverändert; ein nicht mehr gepflegter Adapter wäre das
+   größere Risiko gewesen. Vom User freigegeben.
+   *Folge:* `middleware.ts` bleibt `middleware.ts`. Next.js 16 will `proxy.ts`, das läuft aber nur
+   in der Node.js-Laufzeit, die Cloudflare Workers an dieser Stelle noch nicht unterstützt. Die
+   Warnung beim Bauen ist bekannt und in der Datei begründet.
 2. **Mistral-Konto: Start mit dem Key des Users**, eigenes Konto für sie, sobald sie eines hat.
    Der Wechsel ist eine Umgebungsvariable, kein Umbau.
 3. **Schriften selbst ausgeliefert.** Kein Google-CDN — siehe `CLAUDE.md` §4.
