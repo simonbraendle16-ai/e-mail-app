@@ -1,4 +1,5 @@
-import type { ButtonHTMLAttributes } from "react";
+import Link from "next/link";
+import type { ButtonHTMLAttributes, ReactNode } from "react";
 
 /**
  * Knopf — DESIGN.md §4.
@@ -24,6 +25,9 @@ type Eigenschaften = ButtonHTMLAttributes<HTMLButtonElement> & {
   art?: Art;
 };
 
+const grundstil =
+  "font-ui text-m font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50";
+
 export function Knopf({
   art = "haupt",
   className = "",
@@ -32,7 +36,33 @@ export function Knopf({
   return (
     <button
       {...rest}
-      className={`font-ui text-m font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${arten[art]} ${className}`}
+      className={`${grundstil} ${arten[art]} ${className}`}
     />
+  );
+}
+
+/**
+ * Sieht aus wie ein Knopf, ist aber ein Link. Für Wege durch die App —
+ * ein Knopf, der nur woanders hinführt, gehört als Link ausgezeichnet,
+ * damit Tastatur und Vorleseprogramme ihn richtig einordnen.
+ */
+export function KnopfLink({
+  art = "haupt",
+  className = "",
+  href,
+  children,
+}: {
+  art?: Art;
+  className?: string;
+  href: string;
+  children: ReactNode;
+}) {
+  return (
+    <Link
+      href={href}
+      className={`inline-block ${grundstil} ${arten[art]} ${className}`}
+    >
+      {children}
+    </Link>
   );
 }

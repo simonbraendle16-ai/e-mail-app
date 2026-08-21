@@ -6,11 +6,21 @@ import { anmeldungEingerichtet, oeffentlich } from "@/lib/umgebung";
 const OFFEN = ["/anmelden", "/auth"];
 
 /**
+ * Phase 1: Der Design-Prototyp muss ohne Anmeldung zu sehen sein, damit er
+ * beurteilt werden kann. Das hängt an einer Umgebungsvariable, die nur lokal
+ * gesetzt wird — ausgeliefert ist die App vollständig geschützt.
+ * Fällt am Ende von Phase 1 wieder weg.
+ */
+const prototypOffen = process.env.PROTOTYP_OFFEN === "1";
+
+/**
  * Läuft vor jeder Anfrage: erneuert die Sitzung und schickt Unangemeldete
  * zur Anmeldung. Sie klickt dadurch höchstens einmal im Monat einen Link.
  */
 export async function sitzungErneuern(anfrage: NextRequest) {
   let antwort = NextResponse.next({ request: anfrage });
+
+  if (prototypOffen) return antwort;
 
   // Ohne Zugangsdaten gibt es nichts zu erneuern. Die Anmeldeseite erklärt dann,
   // was fehlt, statt dass hier ein Fehler durchschlägt.
