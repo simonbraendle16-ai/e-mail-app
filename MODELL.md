@@ -9,6 +9,24 @@ etwas Brauchbares herauskommt**. Ohne beides ist „schreibt gute Mails" eine Be
 
 ## 1. Modellzuordnung
 
+> **In Phase 3 gegen die laufende API geprüft.** Die Namen unten sind Gattungsnamen;
+> die tatsächlichen Kennungen lauten:
+>
+> | Hier genannt | Tatsächliche Kennung |
+> |---|---|
+> | Large 3 | `mistral-large-2512` |
+> | ~~Small 3.1~~ → **Small 4** | `mistral-small-2603` |
+> | mistral-embed | `mistral-embed-2312` (1024 Dimensionen, passt zu `vector(1024)`) |
+> | Mistral OCR | `mistral-ocr-2512` |
+>
+> **Small 3.1 führt Mistral inzwischen als veraltet** — an seiner Stelle steht Small 4.
+> Überall unten, wo "Small 3.1" steht, ist die kleine Stufe gemeint.
+>
+> Bewusst feste Versionen statt `-latest`: Sonst änderte sich das Modell still unter der
+> App weg, und die Rückschrittsprüfung aus §6 könnte gar nicht greifen — die setzt voraus,
+> dass ein Modellwechsel überhaupt bemerkt wird. Die Namen sind über Umgebungsvariablen
+> überschreibbar (`lib/modell/anbieter.ts`).
+
 | Aufgabe | Modell | Warum |
 |---|---|---|
 | Eingegangene Mail einordnen | Small 3.1 | Klassifikation, keine Sprachkunst nötig |

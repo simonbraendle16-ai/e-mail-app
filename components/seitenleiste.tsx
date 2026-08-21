@@ -91,11 +91,23 @@ export function Seitenleiste() {
         ))}
       </div>
 
-      {/* Hier wachsen die Funktionen der späteren Phasen hinein:
-          Kosten des laufenden Monats (MODELL.md §7) und was sich sonst noch
-          als eigener Bereich herausstellt. */}
+      {/* Kosten stehen ganz unten und in kleiner Schrift: Sie sind für den
+          User da, nicht für sie. Sich um Kosten kümmern zu müssen wäre genau
+          der „Klotz am Bein", gegen den die App gebaut ist (CLAUDE.md §1). */}
+      <div className="mt-auto p-4 flex flex-col gap-2 items-start">
+        <Link
+          href="/kosten"
+          className={
+            pfad === "/kosten"
+              ? "text-s font-semibold text-gruen"
+              : "text-s text-text-leise hover:text-gruen hover:underline"
+          }
+        >
+          Kosten
+        </Link>
+      </div>
 
-      <form action="/abmelden" method="post" className="mt-auto p-4">
+      <form action="/abmelden" method="post" className="px-4 pb-4">
         <button
           type="submit"
           className="text-s text-text-leise hover:text-gruen hover:underline"
