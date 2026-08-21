@@ -3,7 +3,21 @@ import { fachSkills } from "@/lib/skills/register";
 import { alleKunden } from "@/lib/db/kunden";
 import { Antwortformular } from "./formular";
 
-export const metadata = { title: "Antwort schreiben" };
+/**
+ * Der Titel folgt dem Bildschirm. Steht im Tab „Antwort schreiben", während
+ * auf der Seite „Neue Mail schreiben" steht, sucht sie beim Zurückwechseln
+ * aus Outlook den falschen Tab — und beide Wege sehen im Tab gleich aus.
+ */
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<{ art?: string }>;
+}) {
+  const { art } = await searchParams;
+  return {
+    title: art === "neu" ? "Neue Mail schreiben" : "Antwort schreiben",
+  };
+}
 
 /**
  * Bildschirm 2 — Antworten (`DESIGN.md` §5).

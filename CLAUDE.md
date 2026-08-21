@@ -1,18 +1,24 @@
 # CLAUDE.md — E-Mail-App (DSGVO-konformer Mail-Assistent)
 
-> Stand: 2026-08-21 · Status: **Im Bau. Phase 0 und 1 stehen, Phase 2 abgeschlossen.**
+> Stand: 2026-08-21 · Status: **Alle vierzehn Phasen gebaut (0 bis 13).**
 > Durchlaufen: Anforderungs-Drill ✓ · Spezifikation ✓ · Kreuzverhör ✓ · Freigabe durch den User ✓
 > Gebaut: Fundament ✓ · Design-Prototyp ✓ · Datenmodell ✓ · Modellanbindung ✓ · Skill-Maschinerie ✓
 > · Verfassen Deutsch ✓ · Maschinelle Prüfungen ✓ · Übersetzung & Rückübersetzung ✓
 > · Korrekturschleife ✓ · Kundengedächtnis ✓ · Wissensbasis ✓ · Rückschrittsprüfung ✓
-> · Politur ✓ — als Nächstes Phase 13 (Abnahme).
+> · Politur ✓ · Abnahme ✓
 >
-> **Zwei Dinge aus Phase 10, die noch echten Kontakt brauchen:**
-> Die Migration `0009_unterlagen_ablage.sql` (Storage-Eimer samt Zugriffsregeln) ist
-> geschrieben, aber noch nicht auf dem Supabase-Projekt eingespielt. Und der
-> Mistral-OCR-Aufruf in `lib/wissen/ocr.ts` folgt der dokumentierten Form, ist aber
-> nie gegen den echten Endpunkt gelaufen — geprüft ist nur, dass ein Fehlschlag sauber
-> ankommt und den Upload nicht mitreißt.
+> **Was vor der Übergabe noch offen ist — nichts davon ist Code, alles braucht den User:**
+> 1. **Realistische Testmails.** Ein Durchlauf mit echten Kundenmails braucht eine
+>    angemeldete Sitzung und den Mistral-Schlüssel. Bis dahin ist der ganze Weg nur
+>    in Einzelteilen geprüft (144 Tests), nie am Stück mit echten Daten.
+> 2. **Der `validierung`-Skill** gegen alle vier Dokumente, Anforderung für Anforderung.
+> 3. **Migration `0009_unterlagen_ablage.sql` einspielen** (Storage-Eimer samt
+>    Zugriffsregeln) — geschrieben, aber noch nicht auf dem Supabase-Projekt.
+> 4. **Mistral OCR am echten Endpunkt erproben.** Der Aufruf in `lib/wissen/ocr.ts`
+>    folgt der dokumentierten Form, ist aber nie gegen den echten Dienst gelaufen;
+>    geprüft ist nur, dass ein Fehlschlag sauber ankommt und den Upload nicht mitreißt.
+> 5. **Zehn Minuten Draufschauen durch die Mutter** (PLAN.md §6, §9). Der Ton
+>    entscheidet über den Erfolg und lässt sich erst beurteilen, wenn sie draufschaut.
 >
 > Damit sind **alle sechs** maschinellen Prüfungen aus `MODELL.md` §4 gebaut; die
 > Glossarprüfung kam in Phase 7 dazu, weil sie zwei Sprachen braucht.
@@ -22,7 +28,6 @@
 > aus `PLAN.md` §6 braucht einen Ort, und keiner der fünf Bildschirme passt besser.
 > Die Leitidee des Bildschirms bleibt gewahrt: Angebot, nicht Aufgabe.
 >
-> **Empfohlen vor Phase 13:** zehn Minuten Draufschauen durch die Mutter (PLAN.md §6, §9).
 > Repo: https://github.com/simonbraendle16-ai/e-mail-app (privat)
 > Dieses Dokument ist die verbindliche Projekt-Referenz. Was hier steht, ist entschieden.
 
@@ -34,6 +39,8 @@
 | [`SKILLS.md`](SKILLS.md) | Fach- und System-Skills, Auswahlverfahren, Kontextbudget |
 | [`MODELL.md`](MODELL.md) | Wortlaut der Modell-Anweisungen, maschinelle Prüfungen, Qualitätsmessung |
 | [`DESIGN.md`](DESIGN.md) | Farben, Schrift, Maße, Bausteine, alle fünf Bildschirme |
+| [`ANLEITUNG.md`](ANLEITUNG.md) | Kurzanleitung **für sie** — zwei Seiten, kein Fachwort (Phase 13) |
+| [`nachweise/kosten-hochrechnung.md`](nachweise/kosten-hochrechnung.md) | Was die gebaute App tatsächlich kostet (Phase 13) |
 
 ---
 
