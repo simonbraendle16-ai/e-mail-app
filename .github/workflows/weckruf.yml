@@ -56,6 +56,49 @@ jobs:
 
           echo "Projekt geweckt: ${antwort}"
 
+      # ----------------------------------------------------------------------
+      # Die 100-Tage-Verdichtung (CLAUDE.md 4).
+      #
+      # Nach 100 Tagen wird jede Mail durch eine Verdichtung ersetzt: Anliegen,
+      # Ton, gelernte Fakten -- ohne Wortlaut, ohne Betraege, ohne Namen. Der
+      # Wortlaut bleibt im Archiv nachschlagbar, faellt aber aus der normalen
+      # Suche heraus. Ab dann geht er nicht mehr an Mistral, und genau dort sass
+      # das Risiko.
+      #
+      # Warum hier und nicht in einem eigenen Zeitplan: Dieser Lauf laeuft
+      # ohnehin zweimal die Woche, hat die Geheimnisse schon und liegt bewusst
+      # ausserhalb von Cloudflare. Ein zweiter Zeitplan waere eine zweite
+      # Stelle, die still ausfallen kann.
+      #
+      # Faellt der Schritt aus, ist das KEIN Grund, den Weckruf scheitern zu
+      # lassen -- die Mails bleiben faellig und kommen beim naechsten Lauf
+      # wieder dran. Deshalb continue-on-error.
+      # ----------------------------------------------------------------------
+      - name: Faellige Mails verdichten
+        continue-on-error: true
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
+          WARTUNG_TOKEN: ${{ secrets.WARTUNG_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${APP_URL:-}" ] || [ -z "${WARTUNG_TOKEN:-}" ]; then
+            echo "::warning::APP_URL oder WARTUNG_TOKEN fehlt -- Verdichtung uebersprungen."
+            echo "::warning::Ohne diesen Schritt bleibt der Wortlaut dauerhaft im RAG (CLAUDE.md 4)."
+            exit 0
+          fi
+
+          # Kein --retry: Der Lauf kostet Modellaufrufe. Ein Wiederholen bei
+          # Zeitueberschreitung koennte dieselben Mails ein zweites Mal
+          # verdichten lassen, waehrend der erste Versuch noch laeuft.
+          antwort=$(curl --silent --show-error --fail-with-body \
+            --max-time 300 \
+            -X POST "${APP_URL}/api/wartung/verdichten" \
+            -H "Authorization: Bearer ${WARTUNG_TOKEN}" \
+            -H "Content-Type: application/json")
+
+          echo "Verdichtung: ${antwort}"
+
       - name: Alte Eintraege wegraeumen
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}

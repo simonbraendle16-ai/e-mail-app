@@ -14,6 +14,9 @@
 > 2. **Der `validierung`-Skill** gegen alle vier Dokumente, Anforderung für Anforderung.
 > 3. **Migration `0009_unterlagen_ablage.sql` einspielen** (Storage-Eimer samt
 >    Zugriffsregeln) — geschrieben, aber noch nicht auf dem Supabase-Projekt.
+> 3b. **`WARTUNG_TOKEN` setzen** — in `.env` **und** als GitHub-Secret, zusammen
+>    mit `APP_URL`. Ohne den Wert ist der Verdichtungs-Endpunkt zu und die
+>    100-Tage-Regel läuft nie (siehe `.env.local.beispiel`).
 > 4. **Mistral OCR am echten Endpunkt erproben.** Der Aufruf in `lib/wissen/ocr.ts`
 >    folgt der dokumentierten Form, ist aber nie gegen den echten Dienst gelaufen;
 >    geprüft ist nur, dass ein Fehlschlag sauber ankommt und den Upload nicht mitreißt.
