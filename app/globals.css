@@ -91,6 +91,7 @@
 
   --container-inhalt: 720px; /* Textspalte — bewährte Lesebreite */
   --container-seite: 1080px;
+  --container-leiste: 240px; /* Seitenleiste links */
 
   /* --- Schriften: DESIGN.md §2 ------------------------------------------- */
   /* Die Variablen --schrift-sans/--schrift-serif liefert next/font in layout.tsx.

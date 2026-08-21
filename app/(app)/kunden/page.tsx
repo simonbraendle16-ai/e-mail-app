@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { Kopfzeile, Zurueck } from "@/components/kopfzeile";
 import { Kundenmarke } from "@/components/bausteine/kundenmarke";
 import { kunden } from "@/lib/beispieldaten";
 
@@ -22,9 +21,7 @@ export default async function KundenSeite({
 
   return (
     <>
-      <Kopfzeile />
-      <main className="mx-auto max-w-inhalt px-4 py-6">
-        <Zurueck />
+      <main className="max-w-inhalt px-5 py-6">
         <h1 className="text-xl font-semibold mb-5">Kunden</h1>
 
         {liste.length === 0 ? (

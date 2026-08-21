@@ -120,6 +120,7 @@ Zitat einer eingegangenen Mail. Keine Großbuchstaben-Sperrungen.
 
 --breite-inhalt: 720px;   /* Textspalte — bewährte Lesebreite */
 --breite-seite: 1080px;
+--breite-leiste: 240px;   /* Seitenleiste links (Phase 1) */
 ```
 
 Zwischenwerte sind nicht erlaubt. Wenn 24 px zu wenig und 32 px zu viel wirken, ist die Struktur
@@ -159,42 +160,59 @@ kein Rahmen. Text erklärt, was zu tun ist, nicht was passiert ist.
 
 ## 5. Die fünf Bildschirme
 
-### Start
+### Die Seitenleiste — Navigation der ganzen App
+
+**Ersetzt die frühere Kopfzeile (Entscheidung des Users in Phase 1).** Eine schmale Spalte ganz
+links, `--breite-leiste` (240 px), auf `--grund-tief`, von oben nach unten durchgehend. Alles, was
+die App kann, steht hier untereinander.
+
+Zwei Gründe: Sie soll sich zurechtfinden, ohne die App zu lernen — eine Leiste links ist das
+Muster, das sie aus jedem anderen Programm kennt. Und sie trägt die Funktionen, die noch kommen:
+eine neue Funktion ist eine weitere Zeile, kein Umbau.
 
 ```
-┌────────────────────────────────────────────────────┐
-│  E-Mail                          Kunden   Wissen   │
-│                                                    │
-│                                                    │
-│     Guten Morgen.                                  │
-│                                                    │
-│   ┌──────────────────────┐  ┌──────────────────┐   │
-│   │                      │  │                  │   │
-│   │  Auf eine Mail       │  │  Neue Mail       │   │
-│   │  antworten           │  │  schreiben       │   │
-│   │                      │  │                  │   │
-│   └──────────────────────┘  └──────────────────┘   │
-│                                                    │
-│   Zuletzt                                          │
-│   Meier & Co.  ·  Liefertermin        gestern      │
-│   Van Dijk BV  ·  Angebot             gestern      │
-│   Alpenhof     ·  Bestellung          Montag       │
-│                                                    │
-└────────────────────────────────────────────────────┘
+┌──────────┬─────────────────────────────────────────┐
+│ E-Mail   │                                         │
+├──────────┤   Guten Morgen.                         │
+│ Antworten│                                         │
+│ Neue Mail├─────────────────────────┬───────────────┤
+├──────────┤                         │               │
+│ Kunden   │   Auf eine Mail         │  Neue Mail    │
+│ Wissen   │   antworten             │  schreiben    │
+│          │                         │               │
+│  (Platz  ├─────────────────────────┴───────────────┤
+│   für    │   Zuletzt                               │
+│  spätere │   Meier & Co. · Liefertermin    gestern │
+│  Bereiche)│  Van Dijk BV  · Angebot        gestern │
+│          │   Alpenhof    · Bestellung       Montag │
+│ Abmelden │                                         │
+└──────────┴─────────────────────────────────────────┘
 ```
+
+Oben steht, was sie **tut** (Antworten, Neue Mail), darunter was sie **nachschlagen** kann
+(Kunden, Wissen). Der aktive Bereich trägt eine 3 px starke Kante in `--gruen`, grüne Schrift und
+`--papier` als Fläche. Abmelden sitzt unten, außer Reichweite des Alltags.
+
+Die Anmeldeseite hat keine Leiste — dort gibt es noch nichts zu navigieren.
+
+### Start
 
 Die linke Fläche ist deutlich größer — sie ist der Normalfall. Die Begrüßung wechselt mit der
 Tageszeit, sonst passiert hier nichts.
 
-**Randbündig, ohne Abstand (Phase 1).** Die beiden Flächen sitzen bündig an der Fensterkante —
-kein Seitenabstand, keine Rundung, keine Lücke nach links oder rechts, und sie reichen von oben
-nach unten durch. Sie sind das Erste, was sie morgens sieht, und sollen als Fläche wirken, auf
-die man drauftippt, nicht als Kästchen in der Bildschirmmitte. Die Skizze oben zeigt noch die
-frühere, eingerückte Fassung.
+**Randbündig, ohne Abstand (Phase 1).** Die beiden Flächen sitzen bündig an den Kanten des
+Inhaltsbereichs — kein Seitenabstand, keine Rundung, keine Lücke dazwischen. Sie sind das Erste,
+was sie morgens sieht, und sollen als Fläche wirken, auf die man drauftippt, nicht als Kästchen
+in der Bildschirmmitte.
 
-Die Kopfzeile fluchtet mit dem Seitenabstand darüber. Die Liste „Zuletzt" darunter bleibt auf
-`--breite-seite`: über die volle Fensterbreite gespreizt fielen Kunde und Datum so weit
-auseinander, dass man die Zeile zweimal lesen müsste.
+Dass „Antworten" auch in der Leiste steht, ist kein Widerspruch: die Leiste ist der kurze Sprung
+von überall her, diese Fläche ist der Anfang des Tages.
+
+Die Liste „Zuletzt" darunter bleibt auf `--breite-seite`: über die volle Fensterbreite gespreizt
+fielen Kunde und Datum so weit auseinander, dass man die Zeile zweimal lesen müsste.
+
+**Inhalt linksbündig.** Neben einer Seitenleiste wird zentrierter Inhalt unruhig — die Textspalte
+beginnt links am Inhaltsbereich, nicht in dessen Mitte.
 
 **Die Begrüßung wird im Browser bestimmt**, nicht im Server. Der Server steht bei Cloudflare
 irgendwo im Netz und rechnet in UTC — serverseitig stünde morgens um neun „Guten Abend."

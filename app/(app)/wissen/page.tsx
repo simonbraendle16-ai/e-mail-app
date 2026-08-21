@@ -1,4 +1,3 @@
-import { Kopfzeile, Zurueck } from "@/components/kopfzeile";
 import { Knopf } from "@/components/bausteine/knopf";
 import {
   dokumente,
@@ -28,9 +27,7 @@ export default async function WissenSeite({
 
   return (
     <>
-      <Kopfzeile />
-      <main className="mx-auto max-w-inhalt px-4 py-6">
-        <Zurueck />
+      <main className="max-w-inhalt px-5 py-6">
         <h1 className="text-xl font-semibold mb-5">Wissen</h1>
 
         {/* Vorschläge stehen oben. Ein Klick, und der Begriff ist verbindlich. */}

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Kopfzeile, Zurueck } from "@/components/kopfzeile";
+import { Zurueck } from "@/components/zurueck";
 import { Knopf, KnopfLink } from "@/components/bausteine/knopf";
 import { Papier, Mailtext } from "@/components/bausteine/papier";
 import { Hinweisstreifen } from "@/components/bausteine/hinweisstreifen";
@@ -54,8 +54,7 @@ export default async function ErgebnisSeite({
 
   return (
     <>
-      <Kopfzeile />
-      <main className="mx-auto max-w-seite px-4 py-6">
+      <main className="max-w-seite px-5 py-6">
         <Zurueck nach="/antworten" />
 
         {/* Sie sieht immer, welcher Skill greift, und kann umschalten. */}

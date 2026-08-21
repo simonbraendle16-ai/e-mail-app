@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Kopfzeile, Zurueck } from "@/components/kopfzeile";
+import { Zurueck } from "@/components/zurueck";
 import { Kundenmarke } from "@/components/bausteine/kundenmarke";
 import {
   gelerntesUeberMeier,
@@ -83,8 +83,7 @@ export default async function KundenakteSeite({
 
   return (
     <>
-      <Kopfzeile />
-      <main className="mx-auto max-w-inhalt px-4 py-6">
+      <main className="max-w-inhalt px-5 py-6">
         <Zurueck nach="/kunden" />
 
         <h1 className="text-xl font-semibold mb-2">
