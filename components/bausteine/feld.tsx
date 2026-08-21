@@ -17,6 +17,10 @@ const beschriftungStil = "block text-s text-text-leise mb-2 font-semibold";
 type FeldEigenschaften = InputHTMLAttributes<HTMLInputElement> & {
   beschriftung: string;
   hilfe?: string;
+  /* Wie beim Textbereich: ab React 19 eine normale Eigenschaft. Gebraucht,
+     um den getippten Text auszulesen, ohne bei jedem Tastendruck neu zu
+     zeichnen. */
+  ref?: Ref<HTMLInputElement>;
 };
 
 export function Feld({

@@ -3,6 +3,7 @@ import { serverZugang } from "@/lib/supabase/server";
 import { kundeLaden } from "@/lib/db/kunden";
 import type { KundeLesbar, RegelArt } from "@/lib/db/typen";
 import type { Skill } from "@/lib/skills/typen";
+import { abschnitteSuchen } from "@/lib/wissen/suche";
 
 /**
  * Stellt zusammen, was die App über diesen Kunden und dieses Thema weiß
@@ -64,6 +65,12 @@ export type Kontext = {
 export type KontextAngaben = {
   kundeId?: string | null;
   skill: Skill;
+  /**
+   * Wessen Kostenzeile die Einbettung der Suchanfrage wird. Ohne diese
+   * Angabe fällt die hybride Suche aus und es bleibt bei „zuletzt
+   * geschrieben" — kein Fehler, nur weniger passende Beispiele.
+   */
+  nutzerId?: string;
   /** Eingegangene Mail und Stichworte, für die Suche. */
   suchtext: string;
   /** Nimmt archivierte Mails dazu — nur auf ihren ausdrücklichen Wunsch. */
@@ -88,7 +95,17 @@ export async function kontextSammeln(
   const [fakten, regeln, beispiele, bausteine] = await Promise.all([
     kundeId ? faktenLaden(kundeId) : Promise.resolve([]),
     regelnLaden(kundeId),
-    beispieleLaden(kundeId, skill),
+    beispieleLaden(
+      kundeId,
+      skill,
+      angaben.nutzerId
+        ? {
+            nutzerId: angaben.nutzerId,
+            suchtext: angaben.suchtext,
+            archivEinbeziehen: angaben.archivEinbeziehen,
+          }
+        : undefined,
+    ),
     bausteineLaden(skill),
   ]);
 
@@ -176,16 +193,41 @@ async function regelnLaden(
 /**
  * Frühere Mails als Tonbeispiele.
  *
- * Vorerst die zuletzt verwendeten, nicht die ähnlichsten: Die hybride Suche
- * braucht Einbettungen, und die entstehen erst in Phase 10. Bis dahin ist
- * „zuletzt an diesen Kunden geschrieben" der beste verfügbare Näherungswert
- * für „so schreibt sie ihm".
+ * **Seit Phase 10 zuerst über die hybride Suche** — die *ähnlichsten* Mails
+ * statt der *letzten*. Für den Ton reicht „zuletzt geschrieben", für den
+ * Inhalt nicht: Fragt ein Kunde nach einem Reifegrad, hilft die Mail von
+ * vorletzter Woche zum selben Thema mehr als die von gestern zur Lieferung.
+ *
+ * Die Reihenfolge ist bewusst: Findet die Suche nichts — kein Index, keine
+ * Einbettung, Datenbank klemmt —, fällt sie auf „zuletzt geschrieben"
+ * zurück. Ein generisches Beispiel ist besser als gar keins.
  */
 async function beispieleLaden(
   kundeId: string | null | undefined,
   skill: Skill,
+  suche?: { nutzerId: string; suchtext: string; archivEinbeziehen?: boolean },
 ): Promise<string[]> {
   if (!skill.kontext.includes("letzte_mails")) return [];
+
+  if (suche?.suchtext.trim() && suche.nutzerId) {
+    const treffer = await abschnitteSuchen({
+      nutzerId: suche.nutzerId,
+      frage: suche.suchtext,
+      kundeId,
+      anzahl: kundeId ? GRENZEN.beispieleKunde : GRENZEN.beispieleFremd,
+      archivEinbeziehen: suche.archivEinbeziehen,
+    });
+
+    const gefunden = treffer
+      .filter((t) => t.quelleArt === "mail" || t.quelleArt === "verdichtung")
+      .map((t) =>
+        t.inhalt.length > GRENZEN.beispielZeichen
+          ? t.inhalt.slice(0, GRENZEN.beispielZeichen) + " …"
+          : t.inhalt,
+      );
+
+    if (gefunden.length > 0) return gefunden;
+  }
 
   try {
     const zugang = await serverZugang();

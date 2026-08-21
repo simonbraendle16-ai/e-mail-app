@@ -4,7 +4,15 @@
 > Durchlaufen: Anforderungs-Drill ✓ · Spezifikation ✓ · Kreuzverhör ✓ · Freigabe durch den User ✓
 > Gebaut: Fundament ✓ · Design-Prototyp ✓ · Datenmodell ✓ · Modellanbindung ✓ · Skill-Maschinerie ✓
 > · Verfassen Deutsch ✓ · Maschinelle Prüfungen ✓ · Übersetzung & Rückübersetzung ✓
-> · Korrekturschleife ✓ · Kundengedächtnis ✓ — als Nächstes Phase 10 (Wissensbasis).
+> · Korrekturschleife ✓ · Kundengedächtnis ✓ · Wissensbasis ✓ — als Nächstes Phase 11
+> (Rückschrittsprüfung).
+>
+> **Zwei Dinge aus Phase 10, die noch echten Kontakt brauchen:**
+> Die Migration `0009_unterlagen_ablage.sql` (Storage-Eimer samt Zugriffsregeln) ist
+> geschrieben, aber noch nicht auf dem Supabase-Projekt eingespielt. Und der
+> Mistral-OCR-Aufruf in `lib/wissen/ocr.ts` folgt der dokumentierten Form, ist aber
+> nie gegen den echten Endpunkt gelaufen — geprüft ist nur, dass ein Fehlschlag sauber
+> ankommt und den Upload nicht mitreißt.
 >
 > Damit sind **alle sechs** maschinellen Prüfungen aus `MODELL.md` §4 gebaut; die
 > Glossarprüfung kam in Phase 7 dazu, weil sie zwei Sprachen braucht.
@@ -14,7 +22,7 @@
 > aus `PLAN.md` §6 braucht einen Ort, und keiner der fünf Bildschirme passt besser.
 > Die Leitidee des Bildschirms bleibt gewahrt: Angebot, nicht Aufgabe.
 >
-> **Empfohlen vor Phase 10:** zehn Minuten Draufschauen durch die Mutter (PLAN.md §6, §9).
+> **Empfohlen vor Phase 11:** zehn Minuten Draufschauen durch die Mutter (PLAN.md §6, §9).
 > Repo: https://github.com/simonbraendle16-ai/e-mail-app (privat)
 > Dieses Dokument ist die verbindliche Projekt-Referenz. Was hier steht, ist entschieden.
 

@@ -2,6 +2,7 @@ import "server-only";
 import { formulieren } from "@/lib/modell";
 import { neuversuchHinweis, pruefen } from "@/lib/pruefungen/pruefen";
 import { faktenExtrahieren } from "@/lib/lernen/fakten";
+import { indexieren } from "@/lib/wissen/abschnitte";
 import type { Befund } from "@/lib/pruefungen/typen";
 import { skillWaehlen } from "@/lib/skills/auswahl";
 import { serverZugang } from "@/lib/supabase/server";
@@ -141,6 +142,7 @@ export async function* verfassen(
 
     const kontext = await kontextSammeln({
       kundeId,
+      nutzerId,
       skill: wahl.fachSkill,
       suchtext: [eingehenderText, stichworte].filter(Boolean).join("\n"),
       archivEinbeziehen: angaben.archivEinbeziehen,
@@ -271,6 +273,25 @@ export async function* verfassen(
         eingehenderText,
         antwort: knapp,
         mailId,
+        abbruch: angaben.abbruch,
+      }).catch(() => 0);
+    }
+
+    /* Die Mail wird durchsuchbar — Wissen wächst von allein (`PLAN.md` §6,
+       Phase 10). Auch das erst hier: Einbetten kostet einen Aufruf, und
+       kein Aufruf darf zwischen ihr und ihrer fertigen Mail stehen. */
+    if (mailId) {
+      await indexieren({
+        nutzerId,
+        quelleArt: "mail",
+        quelleId: mailId,
+        text: knapp,
+        kundeId,
+        namen: {
+          kunde: kontext.kunde?.anzeigename,
+          firma: kontext.kunde?.firma,
+          ansprechpartner: kontext.kunde?.ansprechpartner,
+        },
         abbruch: angaben.abbruch,
       }).catch(() => 0);
     }
