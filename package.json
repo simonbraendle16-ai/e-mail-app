@@ -5,7 +5,7 @@
   "description": "DSGVO-konformer Mail-Assistent fuer die Kundenbetreuung einer deutschen Kaeserei",
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "opennextjs-cloudflare build",
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
@@ -13,6 +13,7 @@
     "test:watch": "vitest",
     "vorschau": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
     "ausliefern": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
+    "deploy": "npx wrangler deploy",
     "cf-typen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
     "skills": "node skripte/skills-einlesen.mjs",
     "predev": "node skripte/skills-einlesen.mjs",
