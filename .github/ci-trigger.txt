@@ -1,0 +1,3 @@
+Trigger CI/CD workflow
+
+This file was added to trigger the GitHub Actions workflow for OpenNext build and Cloudflare deploy.
