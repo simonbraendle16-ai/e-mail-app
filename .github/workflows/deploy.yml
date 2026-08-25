@@ -27,9 +27,9 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-
       
-      - run: npm ci
-      - run: npm run build
-      - run: npm run ausliefern
+      - run: pnpm install
+      - run: pnpm run build
+         - run: pnpm run ausliefern
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
