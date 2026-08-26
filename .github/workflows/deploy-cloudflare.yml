@@ -19,7 +19,7 @@ jobs:
           node-version: '24'
 
       - name: Install dependencies
-        run: npm ci --loglevel verbose
+        run: npm ci --no-audit --no-fund
 
       - name: Build (OpenNext)
         env:

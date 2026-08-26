@@ -1,0 +1,27 @@
+name: Repair Linux lockfile
+
+on:
+  workflow_dispatch:
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Use Node.js 24
+        uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+
+      - name: Regenerate lockfile on Linux
+        run: |
+          rm -f package-lock.json
+          npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+
+      - name: Upload repaired lockfile
+        uses: actions/upload-artifact@v5
+        with:
+          name: linux-package-lock
+          path: package-lock.json
