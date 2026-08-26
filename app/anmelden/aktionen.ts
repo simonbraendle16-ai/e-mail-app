@@ -1,7 +1,8 @@
 "use server";
 
 import { serverZugang } from "@/lib/supabase/server";
-import { anmeldungEingerichtet, eigeneAdresse } from "@/lib/umgebung";
+import { anmeldungEingerichtet } from "@/lib/umgebung";
+import { headers } from "next/headers";
 
 export type AnmeldeErgebnis =
   | { stand: "leer" }
@@ -46,10 +47,16 @@ export async function linkAnfordern(
 
   try {
     const zugang = await serverZugang();
+    const kopf = await headers();
+    const protokoll = kopf.get("x-forwarded-proto") ?? "https";
+    const host = kopf.get("x-forwarded-host") ?? kopf.get("host");
+    const anwendungsAdresse = host ? `${protokoll}://${host}` : undefined;
     const { error } = await zugang.auth.signInWithOtp({
       email: adresse,
       options: {
-        emailRedirectTo: `${eigeneAdresse()}/auth/bestaetigen`,
+        emailRedirectTo: anwendungsAdresse
+          ? `${anwendungsAdresse}/auth/bestaetigen`
+          : undefined,
       },
     });
 
