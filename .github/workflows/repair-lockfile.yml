@@ -18,7 +18,7 @@ jobs:
       - name: Regenerate lockfile on Linux
         run: |
           rm -f package-lock.json
-          npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+          npm install --package-lock-only --legacy-peer-deps --ignore-scripts --no-audit --no-fund
 
       - name: Upload repaired lockfile
         uses: actions/upload-artifact@v5
