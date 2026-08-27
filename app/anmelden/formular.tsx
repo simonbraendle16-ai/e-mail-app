@@ -6,7 +6,7 @@ import { Knopf } from "@/components/bausteine/knopf";
 import { Hinweisstreifen } from "@/components/bausteine/hinweisstreifen";
 import { anmelden, type AnmeldeErgebnis } from "./aktionen";
 
-function Absenden() { const { pending } = useFormStatus(); return <Knopf type="submit" disabled={pending}>{pending ? "Einen Moment noch." : "Anmelden"}</Knopf>; }
+function Absenden() { const { pending } = useFormStatus(); return <div className="flex flex-col gap-3 sm:flex-row"><Knopf name="modus" value="anmelden" type="submit" disabled={pending}>{pending ? "Einen Moment noch." : "Anmelden"}</Knopf><Knopf name="modus" value="neu" type="submit" disabled={pending} art="neben">Neues Konto erstellen</Knopf></div>; }
 export function Anmeldeformular() {
   const [ergebnis, absenden] = useActionState<AnmeldeErgebnis, FormData>(anmelden, { stand: "leer" });
   return <form action={absenden} className="flex flex-col gap-4">
