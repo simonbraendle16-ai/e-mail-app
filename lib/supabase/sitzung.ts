@@ -26,6 +26,13 @@ export async function sitzungErneuern(anfrage: NextRequest) {
   // was fehlt, statt dass hier ein Fehler durchschlägt.
   if (!anmeldungEingerichtet()) return antwort;
 
+  const pfad = anfrage.nextUrl.pathname;
+  const istOffen = OFFEN.some((p) => pfad === p || pfad.startsWith(`${p}/`));
+  // Öffentliche Seiten brauchen keine Supabase-Abfrage. Das ist besonders
+  // beim Login wichtig: die Nutzerin sieht das Formular sofort, ohne einen
+  // zusätzlichen Auth-Roundtrip abzuwarten.
+  if (istOffen) return antwort;
+
   const zugang = createServerClient(
     oeffentlich.supabaseUrl,
     oeffentlich.supabasePublishableKey,
@@ -51,9 +58,6 @@ export async function sitzungErneuern(anfrage: NextRequest) {
   const {
     data: { user },
   } = await zugang.auth.getUser();
-
-  const pfad = anfrage.nextUrl.pathname;
-  const istOffen = OFFEN.some((p) => pfad === p || pfad.startsWith(`${p}/`));
 
   if (!user && !istOffen) {
     const ziel = anfrage.nextUrl.clone();
