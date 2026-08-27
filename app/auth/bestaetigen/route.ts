@@ -11,6 +11,7 @@ import { serverZugang } from "@/lib/supabase/server";
  */
 export async function GET(anfrage: NextRequest) {
   const parameter = anfrage.nextUrl.searchParams;
+  const code = parameter.get("code");
   const tokenHash = parameter.get("token_hash");
   const typ = parameter.get("type") as EmailOtpType | null;
 
@@ -21,15 +22,17 @@ export async function GET(anfrage: NextRequest) {
     return NextResponse.redirect(ziel);
   };
 
-  if (!tokenHash || !typ) {
+  if (!code && (!tokenHash || !typ)) {
     return zurueckZurAnmeldung("link-unvollstaendig");
   }
 
   const zugang = await serverZugang();
-  const { error } = await zugang.auth.verifyOtp({
-    type: typ,
-    token_hash: tokenHash,
-  });
+  const { error } = code
+    ? await zugang.auth.exchangeCodeForSession(code)
+    : await zugang.auth.verifyOtp({
+        type: typ as EmailOtpType,
+        token_hash: tokenHash as string,
+      });
 
   if (error) {
     return zurueckZurAnmeldung("link-abgelaufen");
