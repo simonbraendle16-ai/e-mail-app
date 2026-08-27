@@ -1,75 +1,29 @@
 "use server";
-
 import { serverZugang } from "@/lib/supabase/server";
 import { anmeldungEingerichtet } from "@/lib/umgebung";
-import { headers } from "next/headers";
 
-export type AnmeldeErgebnis =
-  | { stand: "leer" }
-  | { stand: "geschickt"; adresse: string }
-  /* `adresse` wird auch im Fehlerfall zurückgegeben: Ihre Eingabe bleibt im
-     Feld stehen, damit sie korrigieren statt neu tippen kann. Kein Ausfall
-     darf sie Tipparbeit kosten (MODELL.md §5). */
-  | { stand: "fehler"; text: string; adresse: string };
+export type AnmeldeErgebnis = { stand: "leer" } | { stand: "angemeldet" } | { stand: "fehler"; text: string; name: string };
 
-/**
- * Schickt ihr einen Anmeldelink per Mail. Kein Passwort, das sie sich merken
- * oder zurücksetzen muss — sie klickt einmal im Monat einen Link (PLAN.md §1).
- *
- * Fehlermeldungen sind deutsch und sagen, was zu tun ist. Keine Codes,
- * kein Englisch, keine Stacktraces (DESIGN.md §7).
- */
-export async function linkAnfordern(
-  _bisher: AnmeldeErgebnis,
-  formular: FormData,
-): Promise<AnmeldeErgebnis> {
-  const adresse = String(formular.get("adresse") ?? "").trim();
+function technischeAdresse(name: string) {
+  const schluessel = name.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  return `${schluessel}@login.invalid`;
+}
 
-  const fehler = (text: string): AnmeldeErgebnis => ({
-    stand: "fehler",
-    text,
-    adresse,
-  });
-
-  if (!adresse) {
-    return fehler("Trag bitte deine E-Mail-Adresse ein.");
-  }
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(adresse)) {
-    return fehler(
-      "Das sieht noch nicht nach einer E-Mail-Adresse aus. Schau bitte nochmal drüber.",
-    );
-  }
-  if (!anmeldungEingerichtet()) {
-    return fehler(
-      "Die App ist noch nicht mit der Datenbank verbunden. Das muss einmalig eingerichtet werden.",
-    );
-  }
-
+export async function anmelden(_bisher: AnmeldeErgebnis, formular: FormData): Promise<AnmeldeErgebnis> {
+  const name = String(formular.get("name") ?? "").trim();
+  const passwort = String(formular.get("passwort") ?? "");
+  const fehler = (text: string): AnmeldeErgebnis => ({ stand: "fehler", text, name });
+  if (!name) return fehler("Trag bitte deinen Namen ein.");
+  if (name.length < 2) return fehler("Der Name muss mindestens zwei Zeichen haben.");
+  if (passwort.length < 8) return fehler("Das Passwort muss mindestens 8 Zeichen haben.");
+  if (!anmeldungEingerichtet()) return fehler("Die App ist noch nicht mit der Datenbank verbunden. Das muss einmalig eingerichtet werden.");
   try {
     const zugang = await serverZugang();
-    const kopf = await headers();
-    const protokoll = kopf.get("x-forwarded-proto") ?? "https";
-    const host = kopf.get("x-forwarded-host") ?? kopf.get("host");
-    const anwendungsAdresse = host ? `${protokoll}://${host}` : undefined;
-    const { error } = await zugang.auth.signInWithOtp({
-      email: adresse,
-      options: {
-        emailRedirectTo: anwendungsAdresse
-          ? `${anwendungsAdresse}/auth/bestaetigen`
-          : undefined,
-      },
-    });
-
-    if (error) {
-      return fehler(
-        "Der Link ließ sich gerade nicht verschicken. Probier es in einer Minute nochmal.",
-      );
-    }
-
-    return { stand: "geschickt", adresse };
-  } catch {
-    return fehler(
-      "Die Verbindung klemmt gerade. Probier es in einer Minute nochmal.",
-    );
-  }
+    const email = technischeAdresse(name);
+    const login = await zugang.auth.signInWithPassword({ email, password: passwort });
+    if (!login.error) return { stand: "angemeldet" };
+    const neu = await zugang.auth.signUp({ email, password: passwort, options: { data: { name } } });
+    if (neu.error || !neu.data.session) return fehler("Name oder Passwort stimmt nicht. Wenn du neu hier bist, prüfe bitte dein Passwort.");
+    return { stand: "angemeldet" };
+  } catch { return fehler("Die Verbindung klemmt gerade. Probier es in einer Minute nochmal."); }
 }

@@ -4,21 +4,7 @@ import { Anmeldeformular } from "./formular";
 
 export const metadata = { title: "Anmelden" };
 
-/* Was schiefgehen kann, wenn sie auf den Link klickt — in ihren Worten. */
-const HINWEISE: Record<string, string> = {
-  "link-abgelaufen":
-    "Der Link ist nicht mehr gültig. Fordere unten einfach einen neuen an.",
-  "link-unvollstaendig":
-    "Mit dem Link stimmte etwas nicht. Fordere unten einfach einen neuen an.",
-};
-
-export default async function AnmeldeSeite({
-  searchParams,
-}: {
-  searchParams: Promise<{ hinweis?: string }>;
-}) {
-  const { hinweis } = await searchParams;
-  const hinweisText = hinweis ? HINWEISE[hinweis] : undefined;
+export default async function AnmeldeSeite() {
   const fehlt = fehltFuerAnmeldung();
 
   return (
@@ -49,9 +35,6 @@ export default async function AnmeldeSeite({
         </div>
       ) : (
         <div className="flex flex-col gap-4">
-          {hinweisText ? (
-            <Hinweisstreifen>{hinweisText}</Hinweisstreifen>
-          ) : null}
           <Anmeldeformular />
         </div>
       )}

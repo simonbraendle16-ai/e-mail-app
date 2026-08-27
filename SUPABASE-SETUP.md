@@ -44,15 +44,15 @@ Drei Werte werden gebraucht:
 Das ist die Grundlage für die Ähnlichkeitssuche (RAG). Lässt sich auch später per Migration
 erledigen, aber hier ist es ein Klick.
 
-## 5 · Anmeldung per Magic Link
+## 5 · Anmeldung per Name und Passwort
 
 **Authentication** → **Sign In / Providers** → **Email**:
 
 - **Enable Email provider**: an
-- **Confirm email**: an
+- **Confirm email**: aus (wichtig: die App verschickt keine Bestätigungs-Mails)
 - **Secure email change**: an
 
-Passwörter brauchen wir nicht — sie meldet sich über einen Link an, den sie per Mail bekommt.
+Die App legt Konten automatisch beim ersten Login an. Die Nutzerin braucht nur ihren Namen und ein Passwort; E-Mail-Versand und Verifizierungslinks werden nicht verwendet.
 
 Die **Site URL** und die **Redirect URLs** unter *Authentication → URL Configuration* bleiben
 zunächst auf `http://localhost:3000`. Sobald die Cloudflare-Adresse steht, kommt sie dort dazu.
