@@ -19,7 +19,11 @@ jobs:
           node-version: '24'
 
       - name: Install dependencies
-        run: npm ci --loglevel verbose --no-audit --no-fund
+        # npm ci scheitert hier an versionslosen optionalen Plattformpaketen,
+        # die im historischen Lockfile enthalten sind (npm ERR! Invalid Version:).
+        # Eine frische Auflösung ist für den Build korrekt und vermeidet diesen
+        # npm-Arborist-Fehler.
+        run: npm install --legacy-peer-deps --loglevel verbose --no-audit --no-fund
 
       - name: Build (OpenNext)
         env:
